@@ -103,6 +103,73 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/Trainers/specializations", async (req, res) => {
+      try {
+        const result = await TrainersCollection.aggregate([
+          {
+            $group: {
+              _id: "$specialization",
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              specialization: "$_id",
+            },
+          },
+        ]).toArray();
+        res.send(result.map((item) => item.specialization));
+      } catch (error) {
+        console.error("Error fetching specializations:", error);
+        res.status(500).send("Something went wrong.");
+      }
+    });
+
+    app.get("/Trainers/tiers", async (req, res) => {
+      try {
+        const result = await TrainersCollection.aggregate([
+          {
+            $group: {
+              _id: "$tier", // Group by the tier field
+            },
+          },
+          {
+            $project: {
+              _id: 0, // Remove _id from the result
+              tier: "$_id", // Rename _id to tier
+            },
+          },
+        ]).toArray();
+
+        // Send the distinct tiers as a response
+        res.send(result.map((item) => item.tier));
+      } catch (error) {
+        console.error("Error fetching tiers:", error);
+        res.status(500).send("Something went wrong.");
+      }
+    });
+
+    // Post multiple trainers
+    app.post("/Trainers", async (req, res) => {
+      const trainersArray = req.body; // Expecting an array of trainers in the request body
+
+      if (!Array.isArray(trainersArray) || trainersArray.length === 0) {
+        return res
+          .status(400)
+          .send({ message: "Please provide an array of trainers." });
+      }
+
+      // Insert multiple trainers into the database
+      const result = await TrainersCollection.insertMany(trainersArray);
+
+      // Return success response
+      res.status(201).send({
+        message: "Trainers added successfully!",
+        insertedCount: result.insertedCount,
+        trainers: result.ops, // The inserted trainers data
+      });
+    });
+
     // Testimonials API
     // Get Testimonials
     app.get("/Testimonials", async (req, res) => {
