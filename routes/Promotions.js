@@ -2,18 +2,16 @@ const express = require("express");
 const router = express.Router();
 const { client } = require("../config/db");
 
-// Collection for Class_Details
-const Class_DetailsCollection = client
-  .db("Seven-Gym")
-  .collection("Class_Details");
+// Collection for Promotions
+const PromotionsCollection = client.db("Seven-Gym").collection("Promotions");
 
-// Get Class_Details
+// Get Promotions
 router.get("/", async (req, res) => {
   try {
-    const result = await Class_DetailsCollection.find().toArray();
+    const result = await PromotionsCollection.find().toArray();
     res.send(result);
   } catch (error) {
-    console.error("Error fetching Class_Details:", error);
+    console.error("Error fetching Promotions:", error);
     res.status(500).send("Something went wrong.");
   }
 });
