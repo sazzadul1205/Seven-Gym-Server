@@ -17,6 +17,8 @@ const Promotions = require("./routes/Promotions");
 const GymFeatures = require("./routes/GymFeatures");
 const Forums = require("./routes/Forums");
 const OurMissions = require("./routes/OurMissions");
+const AboutUs = require("./routes/AboutUs");
+const Feedback = require("./routes/Feedback");
 
 require("dotenv").config();
 const app = express();
@@ -49,6 +51,8 @@ app.use("/Promotions", Promotions);
 app.use("/Gym_Features", GymFeatures);
 app.use("/Forums", Forums);
 app.use("/Our_Missions", OurMissions);
+app.use("/AboutUs", AboutUs);
+app.use("/Feedback", Feedback);
 
 // Set up the basic route
 app.get("/", (req, res) => {
