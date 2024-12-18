@@ -225,4 +225,63 @@ router.get("/feesMinMax", async (req, res) => {
   }
 });
 
+//  ?names=Emily Clark,Liam Johnson
+// New Route: Fetch Multiple Teachers by Name
+router.get("/searchByNames", async (req, res) => {
+  try {
+    const { names } = req.query;
+
+    // Check if names are provided
+    if (!names) {
+      return res.status(400).send({ error: "Names parameter is required." });
+    }
+
+    // Split the comma-separated names and clean up spaces
+    const nameArray = names.split(",").map((name) => name.trim());
+
+    // Query: Case-insensitive partial matching for names
+    const query = {
+      name: { $in: nameArray.map((n) => new RegExp(n, "i")) },
+    };
+
+    // Fetch data from MongoDB
+    const result = await TrainersCollection.find(query).toArray();
+
+    // Return response
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching teachers by names:", error);
+    res.status(500).send({ error: "Something went wrong." });
+  }
+});
+
+// POST request to insert single or multiple trainers into the database
+router.post("/", async (req, res) => {
+  try {
+    const trainers = req.body; // Accept single or multiple trainer objects
+    
+    // Check if the request body is an array or a single object
+    if (!trainers || (Array.isArray(trainers) && trainers.length === 0)) {
+      return res.status(400).send({ message: "Invalid data. Provide trainer(s) information." });
+    }
+
+    // Insert the trainers into the database
+    const result = await TrainersCollection.insertMany(
+      Array.isArray(trainers) ? trainers : [trainers]
+    );
+
+    res.status(201).send({
+      message: "Trainer(s) added successfully.",
+      insertedCount: result.insertedCount,
+      insertedIds: result.insertedIds,
+    });
+  } catch (error) {
+    console.error("Error adding Trainer(s):", error);
+    res.status(500).send({ message: "Something went wrong while adding trainers." });
+  }
+});
+
+
 module.exports = router;
+
+
