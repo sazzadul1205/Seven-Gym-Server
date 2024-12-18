@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
       experienceMax,
       feeMin,
       feeMax,
-      languages,
+      languagesSpoken,
       classType,
       focusArea,
     } = req.query;
@@ -50,8 +50,8 @@ router.get("/", async (req, res) => {
         ...(feeMax && { $lte: parseFloat(feeMax) }),
       };
     }
-    if (languages) {
-      query.languages = { $in: languages.split(",") };
+    if (languagesSpoken) {
+      query.languagesSpoken = { $in: languagesSpoken.split(",") };
     }
     if (classType) {
       query["preferences.classTypes"] = { $in: classType.split(",") };
@@ -67,6 +67,35 @@ router.get("/", async (req, res) => {
 
     const result = await TrainersCollection.find(query).toArray();
     res.send(result);
+  } catch (error) {
+    console.error("Error fetching Trainers:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Simple
+router.get("/sim", async (req, res) => {
+  try {
+    // Projection to return only specific fields: name, availableDays, and classTypes (nested under preferences)
+    const projection = {
+      name: 1,
+      availableDays: 1,
+      "preferences.classTypes": 1, // Accessing only the classTypes within preferences
+    };
+
+    // Fetch all trainers with the specified projection
+    const result = await TrainersCollection.find({}, { projection }).toArray();
+
+    // Modify the result to remove the 'preferences' field and return only classTypes
+    const modifiedResult = result.map((trainer) => {
+      return {
+        name: trainer.name,
+        availableDays: trainer.availableDays,
+        classTypes: trainer.preferences.classTypes, // Only return classTypes, not the entire preferences object
+      };
+    });
+
+    res.send(modifiedResult);
   } catch (error) {
     console.error("Error fetching Trainers:", error);
     res.status(500).send("Something went wrong.");
@@ -119,16 +148,16 @@ router.get("/tiers", async (req, res) => {
   }
 });
 
-// Get Languages
-router.get("/languages", async (req, res) => {
+// Get languagesSpoken
+router.get("/languagesSpoken", async (req, res) => {
   try {
     const result = await TrainersCollection.aggregate([
       {
-        $unwind: "$languages", // Flatten the array
+        $unwind: "$languagesSpoken", // Flatten the array
       },
       {
         $group: {
-          _id: "$languages", // Group by each language
+          _id: "$languagesSpoken", // Group by each language
         },
       },
       {
@@ -140,7 +169,7 @@ router.get("/languages", async (req, res) => {
     ]).toArray();
     res.send(result.map((item) => item.language));
   } catch (error) {
-    console.error("Error fetching languages:", error);
+    console.error("Error fetching languagesSpoken:", error);
     res.status(500).send("Something went wrong.");
   }
 });
@@ -175,56 +204,6 @@ router.get("/focusAreas", async (req, res) => {
   }
 });
 
-// Get the max and min experience
-router.get("/experienceMinMax", async (req, res) => {
-  try {
-    const result = await TrainersCollection.aggregate([
-      {
-        $group: {
-          _id: null,
-          maxExperience: { $max: "$experience" },
-          minExperience: { $min: "$experience" },
-        },
-      },
-    ]).toArray();
-
-    const response = {
-      maximum: result[0].maxExperience,
-      minimum: result[0].minExperience,
-    };
-
-    res.send(response);
-  } catch (error) {
-    console.error("Error fetching experience min and max:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
-// Get the max and min fee per session
-router.get("/feesMinMax", async (req, res) => {
-  try {
-    const result = await TrainersCollection.aggregate([
-      {
-        $group: {
-          _id: null,
-          maxFee: { $max: "$fees.perSession" },
-          minFee: { $min: "$fees.perSession" },
-        },
-      },
-    ]).toArray();
-
-    const response = {
-      maximum: result[0].maxFee,
-      minimum: result[0].minFee,
-    };
-
-    res.send(response);
-  } catch (error) {
-    console.error("Error fetching fees min and max:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
 //  ?names=Emily Clark,Liam Johnson
 // New Route: Fetch Multiple Teachers by Name
 router.get("/searchByNames", async (req, res) => {
@@ -255,14 +234,31 @@ router.get("/searchByNames", async (req, res) => {
   }
 });
 
+// Assuming TrainersCollection is already defined and connected to the database
+router.get("/names", async (req, res) => {
+  try {
+    // Fetch only the `name` field for all documents
+    const names = await TrainersCollection.find(
+      {},
+      { projection: { name: 1, _id: 0 } }
+    ).toArray();
+    res.send(names.map((trainer) => trainer.name)); // Return an array of names
+  } catch (error) {
+    console.error("Error fetching trainer names:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST request to insert single or multiple trainers into the database
 router.post("/", async (req, res) => {
   try {
     const trainers = req.body; // Accept single or multiple trainer objects
-    
+
     // Check if the request body is an array or a single object
     if (!trainers || (Array.isArray(trainers) && trainers.length === 0)) {
-      return res.status(400).send({ message: "Invalid data. Provide trainer(s) information." });
+      return res
+        .status(400)
+        .send({ message: "Invalid data. Provide trainer(s) information." });
     }
 
     // Insert the trainers into the database
@@ -277,11 +273,39 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding Trainer(s):", error);
-    res.status(500).send({ message: "Something went wrong while adding trainers." });
+    res
+      .status(500)
+      .send({ message: "Something went wrong while adding trainers." });
   }
 });
 
+// Assuming TrainersCollection is already defined and connected to the database
+router.delete("/deleteByNames", async (req, res) => {
+  try {
+    const { names } = req.body; // Retrieve the names array from the request body
+
+    if (!Array.isArray(names) || names.length === 0) {
+      return res
+        .status(400)
+        .send("A non-empty array of names is required to delete trainers.");
+    }
+
+    // Attempt to delete trainers whose names match the provided list
+    const result = await TrainersCollection.deleteMany({
+      name: { $in: names },
+    });
+
+    if (result.deletedCount === 0) {
+      return res
+        .status(404)
+        .send("No trainers found with the specified names.");
+    }
+
+    res.send(`${result.deletedCount} trainers have been deleted successfully.`);
+  } catch (error) {
+    console.error("Error deleting trainers by names:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
 
 module.exports = router;
-
-
