@@ -73,35 +73,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Simple
-router.get("/sim", async (req, res) => {
-  try {
-    // Projection to return only specific fields: name, availableDays, and classTypes (nested under preferences)
-    const projection = {
-      name: 1,
-      availableDays: 1,
-      "preferences.classTypes": 1, // Accessing only the classTypes within preferences
-    };
-
-    // Fetch all trainers with the specified projection
-    const result = await TrainersCollection.find({}, { projection }).toArray();
-
-    // Modify the result to remove the 'preferences' field and return only classTypes
-    const modifiedResult = result.map((trainer) => {
-      return {
-        name: trainer.name,
-        availableDays: trainer.availableDays,
-        classTypes: trainer.preferences.classTypes, // Only return classTypes, not the entire preferences object
-      };
-    });
-
-    res.send(modifiedResult);
-  } catch (error) {
-    console.error("Error fetching Trainers:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
 router.get("/specializations", async (req, res) => {
   try {
     const result = await TrainersCollection.aggregate([
@@ -205,7 +176,7 @@ router.get("/focusAreas", async (req, res) => {
 });
 
 //  ?names=Emily Clark,Liam Johnson
-// New Route: Fetch Multiple Teachers by Name
+// New Route: Fetch Teachers by Name (One or More)
 router.get("/searchByNames", async (req, res) => {
   try {
     const { names } = req.query;
@@ -219,9 +190,14 @@ router.get("/searchByNames", async (req, res) => {
     const nameArray = names.split(",").map((name) => name.trim());
 
     // Query: Case-insensitive partial matching for names
-    const query = {
-      name: { $in: nameArray.map((n) => new RegExp(n, "i")) },
-    };
+    let query;
+    if (nameArray.length === 1) {
+      // If only one name is provided, perform an exact match
+      query = { name: { $regex: new RegExp(nameArray[0], "i") } };
+    } else {
+      // If multiple names are provided, use $in for partial matching
+      query = { name: { $in: nameArray.map((n) => new RegExp(n, "i")) } };
+    }
 
     // Fetch data from MongoDB
     const result = await TrainersCollection.find(query).toArray();
@@ -231,80 +207,6 @@ router.get("/searchByNames", async (req, res) => {
   } catch (error) {
     console.error("Error fetching teachers by names:", error);
     res.status(500).send({ error: "Something went wrong." });
-  }
-});
-
-// Assuming TrainersCollection is already defined and connected to the database
-router.get("/names", async (req, res) => {
-  try {
-    // Fetch only the `name` field for all documents
-    const names = await TrainersCollection.find(
-      {},
-      { projection: { name: 1, _id: 0 } }
-    ).toArray();
-    res.send(names.map((trainer) => trainer.name)); // Return an array of names
-  } catch (error) {
-    console.error("Error fetching trainer names:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
-// POST request to insert single or multiple trainers into the database
-router.post("/", async (req, res) => {
-  try {
-    const trainers = req.body; // Accept single or multiple trainer objects
-
-    // Check if the request body is an array or a single object
-    if (!trainers || (Array.isArray(trainers) && trainers.length === 0)) {
-      return res
-        .status(400)
-        .send({ message: "Invalid data. Provide trainer(s) information." });
-    }
-
-    // Insert the trainers into the database
-    const result = await TrainersCollection.insertMany(
-      Array.isArray(trainers) ? trainers : [trainers]
-    );
-
-    res.status(201).send({
-      message: "Trainer(s) added successfully.",
-      insertedCount: result.insertedCount,
-      insertedIds: result.insertedIds,
-    });
-  } catch (error) {
-    console.error("Error adding Trainer(s):", error);
-    res
-      .status(500)
-      .send({ message: "Something went wrong while adding trainers." });
-  }
-});
-
-// Assuming TrainersCollection is already defined and connected to the database
-router.delete("/deleteByNames", async (req, res) => {
-  try {
-    const { names } = req.body; // Retrieve the names array from the request body
-
-    if (!Array.isArray(names) || names.length === 0) {
-      return res
-        .status(400)
-        .send("A non-empty array of names is required to delete trainers.");
-    }
-
-    // Attempt to delete trainers whose names match the provided list
-    const result = await TrainersCollection.deleteMany({
-      name: { $in: names },
-    });
-
-    if (result.deletedCount === 0) {
-      return res
-        .status(404)
-        .send("No trainers found with the specified names.");
-    }
-
-    res.send(`${result.deletedCount} trainers have been deleted successfully.`);
-  } catch (error) {
-    console.error("Error deleting trainers by names:", error);
-    res.status(500).send("Something went wrong.");
   }
 });
 

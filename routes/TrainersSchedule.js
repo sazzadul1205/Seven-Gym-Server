@@ -18,6 +18,26 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get Trainer_Schedule by name
+router.get("/byName", async (req, res) => {
+  const { name } = req.query; // Extract the name from the query parameters
+
+  if (!name) {
+    return res.status(400).send("Name query parameter is required.");
+  }
+
+  try {
+    const result = await Trainers_ScheduleCollection.find({ name }).toArray(); // Filter by name
+    if (result.length === 0) {
+      return res.status(404).send("Trainer not found.");
+    }
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching Trainer_Schedule by name:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST: Add new trainer schedules (array of schedules)
 router.post("/", async (req, res) => {
   try {
