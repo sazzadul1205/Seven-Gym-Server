@@ -20,6 +20,7 @@ const OurMissions = require("./routes/OurMissions");
 const AboutUs = require("./routes/AboutUs");
 const Feedback = require("./routes/Feedback");
 const TrainersSchedule = require("./routes/TrainersSchedule");
+const Users = require("./routes/Users");
 
 require("dotenv").config();
 const app = express();
@@ -55,6 +56,7 @@ app.use("/Our_Missions", OurMissions);
 app.use("/AboutUs", AboutUs);
 app.use("/Feedback", Feedback);
 app.use("/Trainers_Schedule", TrainersSchedule);
+app.use("/Users", Users);
 
 // Set up the basic route
 app.get("/", (req, res) => {
