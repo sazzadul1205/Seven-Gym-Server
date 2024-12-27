@@ -72,6 +72,18 @@ router.get("/", async (req, res) => {
     res.status(500).send("Something went wrong.");
   }
 });
+router.get("/names-and-ids", async (req, res) => {
+  try {
+    const result = await TrainersCollection.find(
+      {},
+      { projection: { name: 1, _id: 1 } }
+    ).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching Trainer Names and IDs:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
 
 router.get("/specializations", async (req, res) => {
   try {
