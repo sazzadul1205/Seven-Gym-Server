@@ -22,6 +22,7 @@ const Feedback = require("./routes/Feedback");
 const TrainersSchedule = require("./routes/TrainersSchedule");
 const Users = require("./routes/Users");
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
+const ClassBookingRequest = require("./routes/ClassBookingRequest");
 
 require("dotenv").config();
 const app = express();
@@ -59,6 +60,7 @@ app.use("/Feedback", Feedback);
 app.use("/Trainers_Schedule", TrainersSchedule);
 app.use("/Users", Users);
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
+app.use("/Class_Booking_Request", ClassBookingRequest);
 
 // Set up the basic route
 app.get("/", (req, res) => {
