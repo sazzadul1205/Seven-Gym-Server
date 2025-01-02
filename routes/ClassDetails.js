@@ -26,6 +26,35 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get Class_Details by Multiple Modules
+router.get("/multi", async (req, res) => {
+  const { modules } = req.query; // Get `modules` from query parameters (comma-separated values expected)
+
+  try {
+    if (!modules) {
+      return res.status(400).send("Modules parameter is required.");
+    }
+
+    // Split `modules` into an array and construct query
+    const moduleList = modules.split(",");
+    const query = { module: { $in: moduleList } };
+
+    // Fetch data based on the query
+    const result = await Class_DetailsCollection.find(query).toArray();
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .send("No classes found for the specified modules.");
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching Class_Details:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST Endpoint: Add a new Class Detail
 router.post("/", async (req, res) => {
   try {
