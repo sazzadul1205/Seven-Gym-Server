@@ -24,6 +24,7 @@ const Users = require("./routes/Users");
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
 const TierData = require("./routes/TierData");
+const CreatePaymentIntent = require("./routes/CreatePaymentIntent");
 
 require("dotenv").config();
 const app = express();
@@ -63,6 +64,7 @@ app.use("/Users", Users);
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/TierData", TierData);
+app.use("/Create_Payment_Intent", CreatePaymentIntent);
 
 // Set up the basic route
 app.get("/", (req, res) => {
