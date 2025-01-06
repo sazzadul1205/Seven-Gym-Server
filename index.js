@@ -26,6 +26,9 @@ const ClassBookingRequest = require("./routes/ClassBookingRequest");
 const TierData = require("./routes/TierData");
 const CreatePaymentIntent = require("./routes/CreatePaymentIntent");
 
+// Payment
+const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
+
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -65,6 +68,7 @@ app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/TierData", TierData);
 app.use("/Create_Payment_Intent", CreatePaymentIntent);
+app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 
 // Set up the basic route
 app.get("/", (req, res) => {
