@@ -29,6 +29,9 @@ const CreatePaymentIntent = require("./routes/CreatePaymentIntent");
 // Payment
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 
+// Automatic
+const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers"); // Import your new cron job route
+
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -69,6 +72,9 @@ app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/TierData", TierData);
 app.use("/Create_Payment_Intent", CreatePaymentIntent);
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
+
+// Automatic
+app.use("/CheckExpiredTiers", CheckExpiredTiers); // Add the cron job route here
 
 // Set up the basic route
 app.get("/", (req, res) => {

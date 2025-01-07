@@ -36,4 +36,34 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Query by paymentID, email, paymentMethod, or tier
+router.get("/search", async (req, res) => {
+  try {
+    // Extract query parameters
+    const { paymentID, email, paymentMethod, tier } = req.query;
+
+    // Build the query object dynamically based on provided parameters
+    const query = {};
+    if (paymentID) query.paymentID = paymentID;
+    if (email) query.email = email;
+    if (paymentMethod) query.paymentMethod = paymentMethod;
+    if (tier) query.tier = tier;
+
+    // Execute the query
+    const result = await Tier_Upgrade_PaymentCollection.find(query).toArray();
+
+    if (result.length > 0) {
+      res.status(200).send(result);
+    } else {
+      res.status(404).send({
+        message: "No records found matching the query.",
+        query: query,
+      });
+    }
+  } catch (error) {
+    console.error("Error querying Tier_Upgrade_Payment:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;

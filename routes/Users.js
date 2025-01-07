@@ -31,6 +31,39 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Check if email exists (GET API)
+router.get("/check-email", async (req, res) => {
+  try {
+    const email = req.query.email; // Get the email from query parameters
+
+    if (!email) {
+      return res.status(400).send({
+        message: "Email parameter is required.",
+      });
+    }
+
+    // Search for the email in the Users collection
+    const existingUser = await UsersCollection.findOne({ email });
+
+    if (existingUser) {
+      return res.status(200).send({
+        message: "Email is already in use.",
+        exists: true,
+      });
+    } else {
+      return res.status(200).send({
+        message: "Email is available.",
+        exists: false,
+      });
+    }
+  } catch (error) {
+    console.error("Error checking email:", error);
+    res.status(500).send({
+      message: "Failed to check email. Please try again.",
+    });
+  }
+});
+
 // Create User (POST API)
 router.post("/", async (req, res) => {
   try {
@@ -62,35 +95,60 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Check if email exists (GET API)
-router.get("/check-email", async (req, res) => {
+// Update User (PUT API)
+router.put("/Update_User_Tier", async (req, res) => {
   try {
-    const email = req.query.email; // Get the email from query parameters
+    const { email, tier, updateTierStart, updateTierEnd, duration } = req.body; // Extract email, tier, updateTierStart, and updateTierEnd from the request body
 
+    // Validate email
     if (!email) {
       return res.status(400).send({
-        message: "Email parameter is required.",
+        message: "Email is required for the update.",
       });
     }
 
-    // Search for the email in the Users collection
-    const existingUser = await UsersCollection.findOne({ email });
+    // Find the user by email
+    const user = await UsersCollection.findOne({ email });
 
-    if (existingUser) {
-      return res.status(200).send({
-        message: "Email is already in use.",
-        exists: true,
-      });
-    } else {
-      return res.status(200).send({
-        message: "Email is available.",
-        exists: false,
+    if (!user) {
+      return res.status(404).send({
+        message: "User not found.",
       });
     }
+
+    // Prepare the update data
+    const updateData = {};
+    if (tier) updateData.tier = tier;
+
+    // Ensure 'duration' has a single start and end value
+    if (updateTierStart && updateTierEnd && duration) {
+      updateData.tierDuration = {
+        duration: duration,
+        start: updateTierStart,
+        end: updateTierEnd,
+      };
+    }
+
+    // Update the user's tier and other details in the database
+    const result = await UsersCollection.updateOne(
+      { email },
+      { $set: updateData }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(400).send({
+        message: "User data was not updated. Please try again.",
+      });
+    }
+
+    // Send success response
+    res.status(200).send({
+      message: "User data updated successfully.",
+    });
   } catch (error) {
-    console.error("Error checking email:", error);
+    console.error("Error updating user data:", error);
     res.status(500).send({
-      message: "Failed to check email. Please try again.",
+      message: "Failed to update user data. Please try again.",
     });
   }
 });
