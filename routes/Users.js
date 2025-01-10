@@ -1,3 +1,4 @@
+// Import required modules
 const express = require("express");
 const router = express.Router();
 const { client } = require("../config/db");
@@ -8,148 +9,146 @@ const UsersCollection = client.db("Seven-Gym").collection("Users");
 // Get Users (with optional email query)
 router.get("/", async (req, res) => {
   try {
-    const email = req.query.email; // Get email query parameter
+    const email = req.query.email;
 
-    let result;
     if (email) {
-      // Search for a specific user by email
-      result = await UsersCollection.findOne({ email });
+      const result = await UsersCollection.findOne({ email });
       if (!result) {
-        return res.status(404).send({
-          message: "User not found.",
-        });
+        return res.status(404).json({ message: "User not found." });
       }
-    } else {
-      // If no email is provided, fetch all users
-      result = await UsersCollection.find().toArray();
+      return res.status(200).json(result);
     }
 
-    res.status(200).send(result);
+    const result = await UsersCollection.find().toArray();
+    res.status(200).json(result);
   } catch (error) {
-    console.error("Error fetching Users:", error);
-    res.status(500).send("Something went wrong.");
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
 // Check if email exists (GET API)
 router.get("/check-email", async (req, res) => {
   try {
-    const email = req.query.email; // Get the email from query parameters
+    const email = req.query.email;
 
     if (!email) {
-      return res.status(400).send({
-        message: "Email parameter is required.",
-      });
+      return res.status(400).json({ message: "Email parameter is required." });
     }
 
-    // Search for the email in the Users collection
     const existingUser = await UsersCollection.findOne({ email });
-
-    if (existingUser) {
-      return res.status(200).send({
-        message: "Email is already in use.",
-        exists: true,
-      });
-    } else {
-      return res.status(200).send({
-        message: "Email is available.",
-        exists: false,
-      });
-    }
+    res.status(200).json({
+      message: existingUser
+        ? "Email is already in use."
+        : "Email is available.",
+      exists: !!existingUser,
+    });
   } catch (error) {
     console.error("Error checking email:", error);
-    res.status(500).send({
-      message: "Failed to check email. Please try again.",
-    });
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
 // Create User (POST API)
 router.post("/", async (req, res) => {
   try {
-    const userData = req.body; // Extract user data from the request body
+    const userData = req.body;
 
-    // Check if email already exists
+    if (!userData.email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
     const existingUser = await UsersCollection.findOne({
       email: userData.email,
     });
     if (existingUser) {
-      return res.status(400).send({
-        message: "The email is already in use. Please use a different email.",
-      });
+      return res.status(400).json({ message: "The email is already in use." });
     }
 
-    // Insert new user
     const result = await UsersCollection.insertOne(userData);
 
-    // Ensure the inserted data is sent in the response
-    const insertedUser = result.ops ? result.ops[0] : result.insertedId; // For MongoDB 4.0+ compatibility
-
-    res.status(201).send({
+    res.status(201).json({
       message: "User created successfully!",
-      data: insertedUser, // Send the inserted user data
+      data: { id: result.insertedId, ...userData },
     });
   } catch (error) {
-    console.error("Error creating User:", error);
-    res.status(500).send("Failed to create user. Please try again.");
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
-// Update User (PUT API)
-router.put("/Update_User_Tier", async (req, res) => {
+// Update User Data (PATCH API)
+router.patch("/", async (req, res) => {
   try {
-    const { email, tier, updateTierStart, updateTierEnd, duration } = req.body; // Extract email, tier, updateTierStart, and updateTierEnd from the request body
+    const { email, ...updateData } = req.body;
 
-    // Validate email
     if (!email) {
-      return res.status(400).send({
-        message: "Email is required for the update.",
-      });
+      return res
+        .status(400)
+        .json({ message: "Email is required for the update." });
     }
 
-    // Find the user by email
     const user = await UsersCollection.findOne({ email });
-
     if (!user) {
-      return res.status(404).send({
-        message: "User not found.",
-      });
+      return res.status(404).json({ message: "User not found." });
     }
 
-    // Prepare the update data
-    const updateData = {};
-    if (tier) updateData.tier = tier;
-
-    // Ensure 'duration' has a single start and end value
-    if (updateTierStart && updateTierEnd && duration) {
-      updateData.tierDuration = {
-        duration: duration,
-        start: updateTierStart,
-        end: updateTierEnd,
-      };
-    }
-
-    // Update the user's tier and other details in the database
     const result = await UsersCollection.updateOne(
       { email },
       { $set: updateData }
     );
 
     if (result.modifiedCount === 0) {
-      return res.status(400).send({
-        message: "User data was not updated. Please try again.",
-      });
+      return res.status(400).json({ message: "User data was not updated." });
     }
 
-    // Send success response
-    res.status(200).send({
-      message: "User data updated successfully.",
-    });
+    res.status(200).json({ message: "User data updated successfully." });
   } catch (error) {
     console.error("Error updating user data:", error);
-    res.status(500).send({
-      message: "Failed to update user data. Please try again.",
-    });
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+// Update User Tier (PUT API)
+router.put("/Update_User_Tier", async (req, res) => {
+  try {
+    const { email, tier, updateTierStart, updateTierEnd, duration } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
+    const user = await UsersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const updateData = {
+      ...(tier && { tier }),
+      ...(updateTierStart &&
+        updateTierEnd &&
+        duration && {
+          tierDuration: {
+            duration,
+            start: updateTierStart,
+            end: updateTierEnd,
+          },
+        }),
+    };
+
+    const result = await UsersCollection.updateOne(
+      { email },
+      { $set: updateData }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(400).json({ message: "User data was not updated." });
+    }
+
+    res.status(200).json({ message: "User tier updated successfully." });
+  } catch (error) {
+    console.error("Error updating user tier:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
