@@ -77,6 +77,48 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Endpoint to add an award to a user's data
+router.post("/Add_Award", async (req, res) => {
+  try {
+    const { email, award } = req.body;
+
+    if (!email || !award) {
+      return res
+        .status(400)
+        .json({ message: "Email and award data are required." });
+    }
+
+    const user = await UsersCollection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check if the user has an awards array; if not, initialize it
+    if (!user.awards) {
+      user.awards = [];
+    }
+
+    // Add the new award to the awards array
+    user.awards.push(award);
+
+    // Update the user data in the database
+    const updateResult = await UsersCollection.updateOne(
+      { email },
+      { $set: { awards: user.awards } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(500).json({ message: "Failed to add the award." });
+    }
+
+    res.status(200).json({ message: "Award added successfully." });
+  } catch (error) {
+    console.error("Error adding award:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 // Update User Data (PATCH API)
 router.patch("/", async (req, res) => {
   try {
@@ -215,6 +257,5 @@ router.put("/Update_User_Tier", async (req, res) => {
 //     res.status(500).json({ message: "Internal server error." });
 //   }
 // });
-
 
 module.exports = router;
