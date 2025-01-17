@@ -194,68 +194,46 @@ router.put("/Update_User_Tier", async (req, res) => {
   }
 });
 
-// Update Favorite Status
-// router.post("/api/updateFavoriteStatus", async (req, res) => {
-//   const { email, award } = req.body;
+// Toggle favorite status for an award with a limit of 5
+router.put("/toggle-award-favorite", async (req, res) => {
+  try {
+    const { email, awardCode } = req.body;
 
-//   if (!email || !award) {
-//     return res.status(400).json({ message: "Invalid request data. 'email' and 'award' are required." });
-//   }
+    if (!email || !awardCode) {
+      return res.status(400).json({ message: "Missing email or awardCode." });
+    }
 
-//   try {
-//     const user = await UsersCollection.findOne({ email });
+    const user = await UsersCollection.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found." });
-//     }
+    const awardIndex = user.awards.findIndex(
+      (award) => award.awardCode === awardCode
+    );
+    if (awardIndex === -1)
+      return res.status(404).json({ message: "Award not found." });
 
-//     // Check if the 'awards' field exists in the user document
-//     if (!user.awards) {
-//       // Add the 'awards' field if it doesn't exist
-//       await UsersCollection.updateOne(
-//         { email },
-//         {
-//           $set: { awards: [] },
-//         }
-//       );
-//     }
+    const isFavorite = user.awards[awardIndex].favorite;
+    const favoritesCount = user.awards.filter((award) => award.favorite).length;
 
-//     // Check if the award already exists
-//     const existingAwardIndex = user.awards?.findIndex((item) => item._id === award._id);
+    if (!isFavorite && favoritesCount >= 5) {
+      return res.status(400).json({ message: "Limit of 5 favorites reached." });
+    }
 
-//     if (existingAwardIndex >= 0) {
-//       // Update the existing award's favorite status
-//       await UsersCollection.updateOne(
-//         {
-//           email,
-//           "awards._id": new ObjectId(award._id),
-//         },
-//         {
-//           $set: {
-//             "awards.$.favorite": award.favorite,
-//           },
-//         }
-//       );
-//     } else {
-//       // Add the new award to the 'awards' array
-//       await UsersCollection.updateOne(
-//         { email },
-//         {
-//           $push: {
-//             awards: {
-//               ...award,
-//               _id: new ObjectId(award._id), // Ensure `_id` is an ObjectId
-//             },
-//           },
-//         }
-//       );
-//     }
+    const updateField = `awards.${awardIndex}.favorite`;
+    const result = await UsersCollection.updateOne(
+      { email },
+      { $set: { [updateField]: !isFavorite } }
+    );
 
-//     res.status(200).json({ message: "Favorite status updated successfully." });
-//   } catch (error) {
-//     console.error("Error updating favorite status:", error);
-//     res.status(500).json({ message: "Internal server error." });
-//   }
-// });
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "Updated successfully!" });
+    } else {
+      res.status(500).json({ message: "Failed to update." });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
 
 module.exports = router;
