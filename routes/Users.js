@@ -236,4 +236,46 @@ router.put("/toggle-award-favorite", async (req, res) => {
   }
 });
 
+// Delete an award by awardCode
+router.delete("/delete-award", async (req, res) => {
+  try {
+    const { email, awardCode } = req.body;
+
+    // Validate request
+    if (!email || !awardCode) {
+      return res.status(400).json({ message: "Missing email or awardCode." });
+    }
+
+    // Find the user
+    const user = await UsersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check if the award exists
+    const awardIndex = user.awards.findIndex(
+      (award) => award.awardCode === awardCode
+    );
+    if (awardIndex === -1) {
+      return res.status(404).json({ message: "Award not found." });
+    }
+
+    // Remove the award from the user's awards array
+    const result = await UsersCollection.updateOne(
+      { email },
+      { $pull: { awards: { awardCode } } }
+    );
+
+    // Check if the award was successfully removed
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "Award deleted successfully!" });
+    } else {
+      res.status(500).json({ message: "Failed to delete award." });
+    }
+  } catch (error) {
+    console.error("Error deleting award:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
 module.exports = router;
