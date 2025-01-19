@@ -215,8 +215,8 @@ router.put("/toggle-award-favorite", async (req, res) => {
     const isFavorite = user.awards[awardIndex].favorite;
     const favoritesCount = user.awards.filter((award) => award.favorite).length;
 
-    if (!isFavorite && favoritesCount >= 5) {
-      return res.status(400).json({ message: "Limit of 5 favorites reached." });
+    if (!isFavorite && favoritesCount >= 6) {
+      return res.status(400).json({ message: "Limit of 6 favorites reached." });
     }
 
     const updateField = `awards.${awardIndex}.favorite`;
