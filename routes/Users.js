@@ -119,6 +119,50 @@ router.post("/Add_Award", async (req, res) => {
   }
 });
 
+// Endpoint to add a workout to a user's recentWorkouts
+router.post("/Add_Workout", async (req, res) => {
+  try {
+    const { email, workout } = req.body;
+
+    // Validate request data
+    if (!email || !workout) {
+      return res
+        .status(400)
+        .json({ message: "Email and workout data are required." });
+    }
+
+    // Find the user by email
+    const user = await UsersCollection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check if the user has a recentWorkouts array; if not, initialize it
+    if (!user.recentWorkouts) {
+      user.recentWorkouts = [];
+    }
+
+    // Add the new workout to the recentWorkouts array
+    user.recentWorkouts.push(workout);
+
+    // Update the user data in the database
+    const updateResult = await UsersCollection.updateOne(
+      { email },
+      { $set: { recentWorkouts: user.recentWorkouts } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(500).json({ message: "Failed to add the workout." });
+    }
+
+    res.status(200).json({ message: "Workout added successfully." });
+  } catch (error) {
+    console.error("Error adding workout:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 // Update User Data (PATCH API)
 router.patch("/", async (req, res) => {
   try {
