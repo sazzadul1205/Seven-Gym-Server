@@ -322,4 +322,46 @@ router.delete("/delete-award", async (req, res) => {
   }
 });
 
+// Delete a workout by workoutId
+router.delete("/delete-workout", async (req, res) => {
+  try {
+    const { email, workoutId } = req.body;
+
+    // Validate request
+    if (!email || !workoutId) {
+      return res.status(400).json({ message: "Missing email or workoutId." });
+    }
+
+    // Find the user
+    const user = await UsersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check if the workout exists
+    const workoutIndex = user.recentWorkouts.findIndex(
+      (workout) => workout.workoutId === workoutId
+    );
+    if (workoutIndex === -1) {
+      return res.status(404).json({ message: "Workout not found." });
+    }
+
+    // Remove the workout from the user's recentWorkouts array
+    const result = await UsersCollection.updateOne(
+      { email },
+      { $pull: { recentWorkouts: { workoutId } } }
+    );
+
+    // Check if the workout was successfully removed
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "Workout deleted successfully!" });
+    } else {
+      res.status(500).json({ message: "Failed to delete workout." });
+    }
+  } catch (error) {
+    console.error("Error deleting workout:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
 module.exports = router;

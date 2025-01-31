@@ -61,6 +61,6 @@ router.get("/", (req, res) => {
 router.get("/status", (req, res) => {
   res.send("Scheduled maintenance is set to run daily at midnight.");
 });
-console.log("CheckExpiredTiers.js is running");
+console.log("Check Expired Tiers is running");
 
 module.exports = router;

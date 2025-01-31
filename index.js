@@ -31,6 +31,7 @@ const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 
 // Automatic
 const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers"); // Import your new cron job route
+const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts"); // Import your new cron job route
 
 require("dotenv").config();
 const app = express();
@@ -75,6 +76,7 @@ app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 
 // Automatic
 app.use("/CheckExpiredTiers", CheckExpiredTiers); // Add the cron job route here
+app.use("/DeleteOldWorkouts", DeleteOldWorkouts); // Add the cron job route here
 
 // Set up the basic route
 app.get("/", (req, res) => {
