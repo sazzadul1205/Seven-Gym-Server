@@ -5,28 +5,29 @@ const cors = require("cors");
 const { connectDB } = require("./config/db");
 
 // API callas
-const HomeBanner = require("./routes/HomeBanner");
-const HomeWelcome = require("./routes/HomeWelcome");
-const HomeServices = require("./routes/HomeServices");
-const OurClasses = require("./routes/OurClasses");
-const ClassDetails = require("./routes/ClassDetails");
-const Trainers = require("./routes/Trainers");
-const Testimonials = require("./routes/Testimonials");
-const Gallery = require("./routes/Gallery");
-const Promotions = require("./routes/Promotions");
-const GymFeatures = require("./routes/GymFeatures");
-const Forums = require("./routes/Forums");
-const OurMissions = require("./routes/OurMissions");
-const AboutUs = require("./routes/AboutUs");
-const Feedback = require("./routes/Feedback");
-const TrainersSchedule = require("./routes/TrainersSchedule");
 const Users = require("./routes/Users");
-const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
-const ClassBookingRequest = require("./routes/ClassBookingRequest");
+const Forums = require("./routes/Forums");
+const AboutUs = require("./routes/AboutUs");
+const Gallery = require("./routes/Gallery");
 const TierData = require("./routes/TierData");
-const CreatePaymentIntent = require("./routes/CreatePaymentIntent");
+const Trainers = require("./routes/Trainers");
+const Feedback = require("./routes/Feedback");
+const Schedule = require("./routes/Schedule");
+const OurClasses = require("./routes/OurClasses");
+const HomeBanner = require("./routes/HomeBanner");
+const Promotions = require("./routes/Promotions");
+const HomeWelcome = require("./routes/HomeWelcome");
+const OurMissions = require("./routes/OurMissions");
+const GymFeatures = require("./routes/GymFeatures");
+const HomeServices = require("./routes/HomeServices");
+const ClassDetails = require("./routes/ClassDetails");
+const Testimonials = require("./routes/Testimonials");
+const TrainersSchedule = require("./routes/TrainersSchedule");
+const ClassBookingRequest = require("./routes/ClassBookingRequest");
+const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
 // Payment
+const CreatePaymentIntent = require("./routes/CreatePaymentIntent");
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 
 // Automatic
@@ -51,28 +52,29 @@ app.use(express.json());
 connectDB();
 
 // Use routes
+app.use("/Users", Users);
+app.use("/Forums", Forums);
+app.use("/AboutUs", AboutUs);
+app.use("/Gallery", Gallery);
+app.use("/Schedule", Schedule);
+app.use("/Trainers", Trainers);
+app.use("/Feedback", Feedback);
+app.use("/TierData", TierData);
+app.use("/Promotions", Promotions);
+app.use("/Our_Classes", OurClasses);
+app.use("/Gym_Features", GymFeatures);
+app.use("/Our_Missions", OurMissions);
+app.use("/Testimonials", Testimonials);
+app.use("/Class_Details", ClassDetails);
 app.use("/Home_Banner_Section", HomeBanner);
 app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
 app.use("/Home_Services_Section", HomeServices);
-app.use("/Our_Classes", OurClasses);
-app.use("/Class_Details", ClassDetails);
-app.use("/Trainers", Trainers);
-app.use("/Testimonials", Testimonials);
-app.use("/Gallery", Gallery);
-app.use("/Promotions", Promotions);
-app.use("/Gym_Features", GymFeatures);
-app.use("/Forums", Forums);
-app.use("/Our_Missions", OurMissions);
-app.use("/AboutUs", AboutUs);
-app.use("/Feedback", Feedback);
 app.use("/Trainers_Schedule", TrainersSchedule);
-app.use("/Users", Users);
-app.use("/Trainers_Booking_Request", TrainersBookingRequest);
-app.use("/Class_Booking_Request", ClassBookingRequest);
-app.use("/TierData", TierData);
-app.use("/Create_Payment_Intent", CreatePaymentIntent);
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
+app.use("/Class_Booking_Request", ClassBookingRequest);
+app.use("/Create_Payment_Intent", CreatePaymentIntent);
+app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 
 // Automatic
 app.use("/CheckExpiredTiers", CheckExpiredTiers); // Add the cron job route here
