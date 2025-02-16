@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Schedule
 const ScheduleCollection = client.db("Seven-Gym").collection("Schedule");
@@ -57,11 +58,9 @@ router.get("/Schedules", async (req, res) => {
 
     // If no matching schedules are found
     if (matchingSchedules.length === 0) {
-      return res
-        .status(404)
-        .json({
-          message: "No matching schedules found for the provided scheduleIDs.",
-        });
+      return res.status(404).json({
+        message: "No matching schedules found for the provided scheduleIDs.",
+      });
     }
 
     // Return the matching schedules
@@ -71,8 +70,6 @@ router.get("/Schedules", async (req, res) => {
     res.status(500).json({ message: "Something went wrong." });
   }
 });
-
-module.exports = router;
 
 // Post Schedule
 router.post("/", async (req, res) => {
@@ -90,6 +87,85 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Error saving Schedule:", error);
     res.status(500).send("Failed to save the schedule.");
+  }
+});
+
+
+// PUT Request to Update Single or Multiple Schedule Entries
+router.put("/AddSchedules", async (req, res) => {
+  try {
+    const { email, scheduleIDs, title, notes, location, status } = req.body;
+
+    if (!email || !Array.isArray(scheduleIDs) || scheduleIDs.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Email and scheduleIDs are required." });
+    }
+
+    // Find the user's schedule
+    const userSchedule = await ScheduleCollection.findOne({ email });
+
+    if (!userSchedule) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    let updatedSchedules = [];
+
+    // Iterate through all days in the user's schedule
+    for (const day in userSchedule.schedule) {
+      for (const time in userSchedule.schedule[day].schedule) {
+        const scheduleItem = userSchedule.schedule[day].schedule[time];
+
+        // If the schedule ID matches, update the entry
+        if (scheduleIDs.includes(scheduleItem.id)) {
+          scheduleItem.title = title || scheduleItem.title;
+          scheduleItem.notes = notes || scheduleItem.notes;
+          scheduleItem.location = location || scheduleItem.location;
+          scheduleItem.status = status || scheduleItem.status;
+
+          updatedSchedules.push(scheduleItem);
+        }
+      }
+    }
+
+    // Save the updated schedule back to the database
+    await ScheduleCollection.updateOne(
+      { email },
+      { $set: { schedule: userSchedule.schedule } }
+    );
+
+    res.json({
+      message: "Schedules updated successfully.",
+      updatedSchedules,
+    });
+  } catch (error) {
+    console.error("Error updating schedules:", error);
+    res.status(500).json({ message: "Something went wrong." });
+  }
+});
+
+// Delete a schedule by _id
+router.delete("/Schedules/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid schedule ID format." });
+    }
+
+    // Delete the schedule by _id
+    const result = await ScheduleCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Schedule not found." });
+    }
+
+    res.json({ message: "Schedule deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting schedule:", error);
+    res.status(500).json({ message: "Something went wrong." });
   }
 });
 
