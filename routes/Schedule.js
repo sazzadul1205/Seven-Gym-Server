@@ -201,6 +201,59 @@ router.put("/AddSchedules", async (req, res) => {
   }
 });
 
+// Updated Route to Reset Schedule Entries
+router.put("/DeleteSchedules", async (req, res) => {
+  try {
+    const { email, scheduleIDs } = req.body;
+
+    if (!email || !Array.isArray(scheduleIDs) || scheduleIDs.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Email and scheduleIDs are required." });
+    }
+
+    // Find the user's schedule
+    const userSchedule = await ScheduleCollection.findOne({ email });
+
+    if (!userSchedule) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    let updatedSchedules = [];
+
+    // Iterate through all days in the user's schedule
+    for (const day in userSchedule.schedule) {
+      for (const time in userSchedule.schedule[day].schedule) {
+        const scheduleItem = userSchedule.schedule[day].schedule[time];
+
+        // If the schedule ID matches, reset the entry
+        if (scheduleIDs.includes(scheduleItem.id)) {
+          scheduleItem.title = "";
+          scheduleItem.notes = "";
+          scheduleItem.location = "";
+          scheduleItem.status = "";
+
+          updatedSchedules.push(scheduleItem);
+        }
+      }
+    }
+
+    // Save the updated schedule back to the database
+    await ScheduleCollection.updateOne(
+      { email },
+      { $set: { schedule: userSchedule.schedule } }
+    );
+
+    res.json({
+      message: "Schedules reset successfully.",
+      updatedSchedules,
+    });
+  } catch (error) {
+    console.error("Error resetting schedules:", error);
+    res.status(500).json({ message: "Something went wrong." });
+  }
+});
+
 // Delete a schedule by _id
 router.delete("/Schedules/:id", async (req, res) => {
   try {
