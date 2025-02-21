@@ -254,6 +254,44 @@ router.put("/DeleteSchedules", async (req, res) => {
   }
 });
 
+// PUT request to replace the user's schedule for a specific day.
+router.put("/RegenerateNewDaySchedule", async (req, res) => {
+  try {
+    const { email, dayName, scheduleData } = req.body; // Get email, dayName, and scheduleData from the request body
+
+    // Input validation
+    if (!email || !dayName || !scheduleData) {
+      return res
+        .status(400)
+        .send("Email, dayName, and scheduleData are required.");
+    }
+
+    // Find the user by email
+    const user = await ScheduleCollection.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).send("User not found.");
+    }
+
+    // Check if the requested dayName exists in the user's schedule
+    if (!user.schedule || !user.schedule[dayName]) {
+      return res.status(404).send(`Schedule for ${dayName} not found.`);
+    }
+
+    // Fully update (replace) the schedule for the specified day
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { [`schedule.${dayName}`]: scheduleData } }
+    );
+
+    // Respond with success
+    res.send("Schedule updated successfully.");
+  } catch (error) {
+    console.error("Error updating Schedule:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Delete a schedule by _id
 router.delete("/Schedules/:id", async (req, res) => {
   try {
