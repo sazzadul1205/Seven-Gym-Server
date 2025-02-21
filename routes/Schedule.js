@@ -6,11 +6,24 @@ const { ObjectId } = require("mongodb");
 // Collection for Schedule
 const ScheduleCollection = client.db("Seven-Gym").collection("Schedule");
 
-// Get Schedule (as before)
 router.get("/", async (req, res) => {
   try {
-    const result = await ScheduleCollection.find().toArray();
-    res.send(result);
+    const { email } = req.query; // Get email from query parameters
+
+    if (email) {
+      // Find the schedule for the given email
+      const result = await ScheduleCollection.find({ email: email }).toArray();
+
+      if (result.length === 0) {
+        return res.status(404).send("No schedule found for the given email.");
+      }
+
+      return res.send(result);
+    } else {
+      // If no email is provided, fetch all schedules
+      const result = await ScheduleCollection.find().toArray();
+      return res.send(result);
+    }
   } catch (error) {
     console.error("Error fetching Schedule:", error);
     res.status(500).send("Something went wrong.");
