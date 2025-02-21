@@ -305,6 +305,112 @@ router.put("/RegenerateNewDaySchedule", async (req, res) => {
   }
 });
 
+// PUT Request to Add Notes for a specific user by email
+router.put("/AddNotes", async (req, res) => {
+  try {
+    const { email, newNotes } = req.body; // Expecting email and newNotes (which should be an array of notes)
+
+    if (!email || !newNotes || !Array.isArray(newNotes)) {
+      return res.status(400).send("Email and newNotes (array) are required.");
+    }
+
+    // Find the user's schedule
+    const result = await ScheduleCollection.findOne({ email: email });
+
+    if (!result) {
+      return res.status(404).send("Schedule not found for the given email.");
+    }
+
+    // Ensure that notes is initialized as an array if it is not already
+    const currentNotes = Array.isArray(result.notes) ? result.notes : [];
+
+    // Add new notes to the user's schedule
+    const updatedNotes = [...currentNotes, ...newNotes];
+
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { notes: updatedNotes } }
+    );
+
+    return res.send("Notes updated successfully.");
+  } catch (error) {
+    console.error("Error updating notes:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// PUT Request to Add Todo for a specific user by email
+router.put("/AddToDo", async (req, res) => {
+  try {
+    const { email, newTodo } = req.body; // Expecting email and newTodo (which should be an array of to-dos)
+
+    if (!email || !newTodo || !Array.isArray(newTodo)) {
+      return res.status(400).send("Email and newTodo (array) are required.");
+    }
+
+    // Find the user's schedule
+    const result = await ScheduleCollection.findOne({ email: email });
+
+    if (!result) {
+      return res.status(404).send("Schedule not found for the given email.");
+    }
+
+    // Ensure that todo is initialized as an array if it is not already
+    const currentTodos = Array.isArray(result.todo) ? result.todo : [];
+
+    // Add new to-dos to the user's schedule
+    const updatedTodos = [...currentTodos, ...newTodo];
+
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { todo: updatedTodos } }
+    );
+
+    return res.send("To-do updated successfully.");
+  } catch (error) {
+    console.error("Error updating todo:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// PUT Request to Add Priority for a specific user by email
+router.put("/AddPriority", async (req, res) => {
+  try {
+    const { email, newPriority } = req.body; // Expecting email and newPriority (which should be an array of priorities)
+
+    if (!email || !newPriority || !Array.isArray(newPriority)) {
+      return res
+        .status(400)
+        .send("Email and newPriority (array) are required.");
+    }
+
+    // Find the user's schedule
+    const result = await ScheduleCollection.findOne({ email: email });
+
+    if (!result) {
+      return res.status(404).send("Schedule not found for the given email.");
+    }
+
+    // Ensure that priority is initialized as an array if it is not already
+    const currentPriorities = Array.isArray(result.priority)
+      ? result.priority
+      : [];
+
+    // Add new priorities to the user's schedule (if not already present)
+    const updatedPriorities = [...currentPriorities, ...newPriority];
+
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { priority: updatedPriorities } }
+    );
+
+    return res.send("Priority updated successfully.");
+  } catch (error) {
+    console.error("Error updating priority:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Delete a schedule by _id
 router.delete("/Schedules/:id", async (req, res) => {
   try {
