@@ -436,4 +436,114 @@ router.delete("/Schedules/:id", async (req, res) => {
   }
 });
 
+// DELETE Request to Remove a Note by email and note ID
+router.delete("/DeleteNote", async (req, res) => {
+  try {
+    const { email, noteID } = req.body; // Expecting email and noteID
+
+    if (!email || !noteID) {
+      return res.status(400).send("Email and noteID are required.");
+    }
+
+    // Find the user's schedule
+    const result = await ScheduleCollection.findOne({ email: email });
+
+    if (!result) {
+      return res.status(404).send("Schedule not found for the given email.");
+    }
+
+    // Ensure that notes exist
+    if (!result.notes || typeof result.notes !== "object") {
+      return res.status(404).send("No notes found for this user.");
+    }
+
+    // Remove the note by deleting the key
+    const updatedNotes = { ...result.notes };
+    delete updatedNotes[noteID];
+
+    // Update the database with the modified notes object
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { notes: updatedNotes } }
+    );
+
+    return res.send("Note deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting note:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// DELETE Request to Remove a To-Do item by email and todo ID
+router.delete("/DeleteToDo", async (req, res) => {
+  try {
+    const { email, todoID } = req.body; // Expecting email and todoID
+
+    if (!email || !todoID) {
+      return res.status(400).send("Email and todoID are required.");
+    }
+
+    // Find the user's schedule
+    const result = await ScheduleCollection.findOne({ email: email });
+
+    if (!result) {
+      return res.status(404).send("Schedule not found for the given email.");
+    }
+
+    // Ensure that to-do exists
+    if (!result.todo || typeof result.todo !== "object") {
+      return res.status(404).send("No to-do items found for this user.");
+    }
+
+    // Remove the to-do item by deleting the key
+    const updatedTodos = { ...result.todo };
+    delete updatedTodos[todoID];
+
+    // Update the database with the modified to-do object
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { todo: updatedTodos } }
+    );
+
+    return res.send("To-do item deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting to-do item:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// DELETE Request to Remove Priority by email and priority ID
+router.delete("/DeletePriority", async (req, res) => {
+  try {
+    const { email, priorityID } = req.body; // Expecting email and priorityID
+
+    if (!email || !priorityID) {
+      return res.status(400).send("Email and priorityID are required.");
+    }
+
+    // Find the user's schedule
+    const result = await ScheduleCollection.findOne({ email: email });
+
+    if (!result) {
+      return res.status(404).send("Schedule not found for the given email.");
+    }
+
+    // Filter out the priority with the given ID
+    const updatedPriorities = result.priority.filter(
+      (item) => item.id !== priorityID
+    );
+
+    // Update the document with the new priorities array
+    await ScheduleCollection.updateOne(
+      { email: email },
+      { $set: { priority: updatedPriorities } }
+    );
+
+    return res.send("Priority deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting priority:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;
