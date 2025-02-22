@@ -321,15 +321,15 @@ router.put("/AddNotes", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Ensure that notes is initialized as an object if it is not already
-    const currentNotes = typeof result.notes === "object" ? result.notes : {};
+    // Ensure that notes is initialized as an array if it is not already
+    const currentNotes = Array.isArray(result.notes) ? result.notes : [];
 
-    // Add new note using its ID as the key
-    const updatedNotes = { ...currentNotes, [newNotes.id]: newNotes };
+    // Add new note to the existing notes array
+    currentNotes.push(newNotes);
 
     await ScheduleCollection.updateOne(
       { email: email },
-      { $set: { notes: updatedNotes } }
+      { $set: { notes: currentNotes } }
     );
 
     return res.send("Notes updated successfully.");
@@ -355,15 +355,15 @@ router.put("/AddToDo", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Ensure that todo is initialized as an object if it is not already
-    const currentTodos = typeof result.todo === "object" ? result.todo : {};
+    // Ensure that todo is initialized as an array if it is not already
+    const currentTodos = Array.isArray(result.todo) ? result.todo : [];
 
-    // Add new todo using its ID as the key
-    const updatedTodos = { ...currentTodos, [newTodo.id]: newTodo };
+    // Add new todo to the existing todo array
+    currentTodos.push(newTodo);
 
     await ScheduleCollection.updateOne(
       { email: email },
-      { $set: { todo: updatedTodos } }
+      { $set: { todo: currentTodos } }
     );
 
     return res.send("To-do updated successfully.");
