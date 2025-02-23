@@ -308,10 +308,10 @@ router.put("/RegenerateNewDaySchedule", async (req, res) => {
 // PUT Request to Add Notes for a specific user by email
 router.put("/AddNotes", async (req, res) => {
   try {
-    const { email, newNotes } = req.body; // Expecting email and newNotes (object)
+    const { email, newNote } = req.body; // Expecting email and newNote (object)
 
-    if (!email || !newNotes || typeof newNotes !== "object") {
-      return res.status(400).send("Email and newNotes (object) are required.");
+    if (!email || !newNote || typeof newNote !== "object") {
+      return res.status(400).send("Email and newNote (object) are required.");
     }
 
     // Find the user's schedule
@@ -325,7 +325,7 @@ router.put("/AddNotes", async (req, res) => {
     const currentNotes = Array.isArray(result.notes) ? result.notes : [];
 
     // Add new note to the existing notes array
-    currentNotes.push(newNotes);
+    currentNotes.push(newNote);
 
     await ScheduleCollection.updateOne(
       { email: email },
