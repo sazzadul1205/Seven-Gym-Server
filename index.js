@@ -89,3 +89,11 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Seven Gym is Running on Port: ${port}`);
 });
+
+process.on("uncaughtException", (err) => {
+  console.error("There was an uncaught error", err);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
