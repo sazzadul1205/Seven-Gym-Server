@@ -452,16 +452,10 @@ router.delete("/DeleteNote", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Ensure that notes exist
-    if (!result.notes || typeof result.notes !== "object") {
-      return res.status(404).send("No notes found for this user.");
-    }
+    // Filter out the note with the given ID
+    const updatedNotes = result.notes.filter((item) => item.id !== noteID);
 
-    // Remove the note by deleting the key
-    const updatedNotes = { ...result.notes };
-    delete updatedNotes[noteID];
-
-    // Update the database with the modified notes object
+    // Update the document with the new notes array
     await ScheduleCollection.updateOne(
       { email: email },
       { $set: { notes: updatedNotes } }
@@ -490,19 +484,13 @@ router.delete("/DeleteToDo", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Ensure that to-do exists
-    if (!result.todo || typeof result.todo !== "object") {
-      return res.status(404).send("No to-do items found for this user.");
-    }
+    // Filter out the to-do item with the given ID
+    const updatedToDos = result.todo.filter((item) => item.id !== todoID);
 
-    // Remove the to-do item by deleting the key
-    const updatedTodos = { ...result.todo };
-    delete updatedTodos[todoID];
-
-    // Update the database with the modified to-do object
+    // Update the document with the new to-do array
     await ScheduleCollection.updateOne(
       { email: email },
-      { $set: { todo: updatedTodos } }
+      { $set: { todo: updatedToDos } }
     );
 
     return res.send("To-do item deleted successfully.");
