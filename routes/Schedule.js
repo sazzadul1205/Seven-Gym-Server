@@ -436,13 +436,15 @@ router.delete("/Schedules/:id", async (req, res) => {
   }
 });
 
-// DELETE Request to Remove a Note by email and note ID
+// DELETE Request to Remove Notes (either single or multiple) by email and note ID(s)
 router.delete("/DeleteNote", async (req, res) => {
   try {
-    const { email, noteID } = req.body; // Expecting email and noteID
+    const { email, noteID, noteIDs } = req.body; // Expecting email, noteID (single), or noteIDs (array)
 
-    if (!email || !noteID) {
-      return res.status(400).send("Email and noteID are required.");
+    if (!email || (!noteID && !noteIDs)) {
+      return res
+        .status(400)
+        .send("Email and at least one note ID are required.");
     }
 
     // Find the user's schedule
@@ -452,8 +454,21 @@ router.delete("/DeleteNote", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Filter out the note with the given ID
-    const updatedNotes = result.notes.filter((item) => item.id !== noteID);
+    let updatedNotes;
+
+    // Handle case for a single noteID
+    if (noteID) {
+      updatedNotes = result.notes.filter((item) => item.id !== noteID);
+    }
+    // Handle case for an array of noteIDs
+    else if (Array.isArray(noteIDs) && noteIDs.length > 0) {
+      updatedNotes = result.notes.filter((item) => !noteIDs.includes(item.id));
+    }
+
+    // If neither a single ID nor an array is provided, return an error
+    if (!updatedNotes) {
+      return res.status(400).send("Invalid note ID(s).");
+    }
 
     // Update the document with the new notes array
     await ScheduleCollection.updateOne(
@@ -461,20 +476,22 @@ router.delete("/DeleteNote", async (req, res) => {
       { $set: { notes: updatedNotes } }
     );
 
-    return res.send("Note deleted successfully.");
+    return res.send("Note(s) deleted successfully.");
   } catch (error) {
     console.error("Error deleting note:", error);
     res.status(500).send("Something went wrong.");
   }
 });
 
-// DELETE Request to Remove a To-Do item by email and todo ID
+// DELETE Request to Remove To-Do Items (either single or multiple) by email and to-do ID(s)
 router.delete("/DeleteToDo", async (req, res) => {
   try {
-    const { email, todoID } = req.body; // Expecting email and todoID
+    const { email, todoID, todoIDs } = req.body; // Expecting email, todoID (single), or todoIDs (array)
 
-    if (!email || !todoID) {
-      return res.status(400).send("Email and todoID are required.");
+    if (!email || (!todoID && !todoIDs)) {
+      return res
+        .status(400)
+        .send("Email and at least one to-do ID are required.");
     }
 
     // Find the user's schedule
@@ -484,8 +501,21 @@ router.delete("/DeleteToDo", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Filter out the to-do item with the given ID
-    const updatedToDos = result.todo.filter((item) => item.id !== todoID);
+    let updatedToDos;
+
+    // Handle case for a single todoID
+    if (todoID) {
+      updatedToDos = result.todo.filter((item) => item.id !== todoID);
+    }
+    // Handle case for an array of todoIDs
+    else if (Array.isArray(todoIDs) && todoIDs.length > 0) {
+      updatedToDos = result.todo.filter((item) => !todoIDs.includes(item.id));
+    }
+
+    // If neither a single ID nor an array is provided, return an error
+    if (!updatedToDos) {
+      return res.status(400).send("Invalid to-do ID(s).");
+    }
 
     // Update the document with the new to-do array
     await ScheduleCollection.updateOne(
@@ -493,20 +523,22 @@ router.delete("/DeleteToDo", async (req, res) => {
       { $set: { todo: updatedToDos } }
     );
 
-    return res.send("To-do item deleted successfully.");
+    return res.send("To-do item(s) deleted successfully.");
   } catch (error) {
     console.error("Error deleting to-do item:", error);
     res.status(500).send("Something went wrong.");
   }
 });
 
-// DELETE Request to Remove Priority by email and priority ID
+// DELETE Request to Remove Priorities (either single or multiple) by email and priority ID(s)
 router.delete("/DeletePriority", async (req, res) => {
   try {
-    const { email, priorityID } = req.body; // Expecting email and priorityID
+    const { email, priorityID, priorityIDs } = req.body; // Expecting email, priorityID (single), or priorityIDs (array)
 
-    if (!email || !priorityID) {
-      return res.status(400).send("Email and priorityID are required.");
+    if (!email || (!priorityID && !priorityIDs)) {
+      return res
+        .status(400)
+        .send("Email and at least one priority ID are required.");
     }
 
     // Find the user's schedule
@@ -516,10 +548,25 @@ router.delete("/DeletePriority", async (req, res) => {
       return res.status(404).send("Schedule not found for the given email.");
     }
 
-    // Filter out the priority with the given ID
-    const updatedPriorities = result.priority.filter(
-      (item) => item.id !== priorityID
-    );
+    let updatedPriorities;
+
+    // Handle case for a single priorityID
+    if (priorityID) {
+      updatedPriorities = result.priority.filter(
+        (item) => item.id !== priorityID
+      );
+    }
+    // Handle case for an array of priorityIDs
+    else if (Array.isArray(priorityIDs) && priorityIDs.length > 0) {
+      updatedPriorities = result.priority.filter(
+        (item) => !priorityIDs.includes(item.id)
+      );
+    }
+
+    // If neither a single ID nor an array is provided, return an error
+    if (!updatedPriorities) {
+      return res.status(400).send("Invalid priority ID(s).");
+    }
 
     // Update the document with the new priorities array
     await ScheduleCollection.updateOne(
@@ -527,7 +574,7 @@ router.delete("/DeletePriority", async (req, res) => {
       { $set: { priority: updatedPriorities } }
     );
 
-    return res.send("Priority deleted successfully.");
+    return res.send("Priority(s) deleted successfully.");
   } catch (error) {
     console.error("Error deleting priority:", error);
     res.status(500).send("Something went wrong.");
