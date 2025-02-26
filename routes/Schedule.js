@@ -411,6 +411,44 @@ router.put("/AddPriority", async (req, res) => {
   }
 });
 
+// This endpoint resets the "schedule" field for a given email and replaces it with a provided schedule.
+router.put("/DeleteFullScheduleByEmail", async (req, res) => {
+  try {
+    const { email } = req.query; // Get email from query parameters
+    const { schedule } = req.body; // Get the new schedule from request body
+
+    if (!email) {
+      return res.status(400).send("Email is required.");
+    }
+
+    if (!schedule || typeof schedule !== "object") {
+      return res.status(400).send("Valid schedule data is required.");
+    }
+
+    // Check if the schedule exists
+    const scheduleDoc = await ScheduleCollection.findOne({ email });
+
+    if (!scheduleDoc) {
+      return res.status(404).send("No schedule found for the given email.");
+    }
+
+    // Replace the existing schedule with the provided schedule
+    const result = await ScheduleCollection.updateOne(
+      { email },
+      { $set: { schedule } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(500).send("Failed to reset and update the schedule.");
+    }
+
+    return res.send("Schedule reset and updated successfully.");
+  } catch (error) {
+    console.error("Error resetting schedule:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Delete a schedule by _id
 router.delete("/Schedules/:id", async (req, res) => {
   try {
