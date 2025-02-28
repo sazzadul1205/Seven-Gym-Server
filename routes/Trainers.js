@@ -6,7 +6,6 @@ const router = express.Router();
 const TrainersCollection = client.db("Seven-Gym").collection("Trainers");
 
 // Get Trainers
-// Assuming you're using MongoDB (or a similar DB that supports this syntax)
 router.get("/", async (req, res) => {
   try {
     const {
@@ -72,6 +71,8 @@ router.get("/", async (req, res) => {
     res.status(500).send("Something went wrong.");
   }
 });
+
+// Get Only Trainers Names and IDs
 router.get("/names-and-ids", async (req, res) => {
   try {
     const result = await TrainersCollection.find(
@@ -85,6 +86,7 @@ router.get("/names-and-ids", async (req, res) => {
   }
 });
 
+// Get Specializations
 router.get("/specializations", async (req, res) => {
   try {
     const result = await TrainersCollection.aggregate([
@@ -107,6 +109,7 @@ router.get("/specializations", async (req, res) => {
   }
 });
 
+// Get Tiers
 router.get("/tiers", async (req, res) => {
   try {
     const result = await TrainersCollection.aggregate([
@@ -131,7 +134,7 @@ router.get("/tiers", async (req, res) => {
   }
 });
 
-// Get languagesSpoken
+// Get languages Spoken
 router.get("/languagesSpoken", async (req, res) => {
   try {
     const result = await TrainersCollection.aggregate([
@@ -187,9 +190,8 @@ router.get("/focusAreas", async (req, res) => {
   }
 });
 
-//  ?names=Emily Clark,Liam Johnson
-// New Route: Fetch Teachers by Name (One or More)
-router.get("/searchByNames", async (req, res) => {
+// Fetch Teachers by Name (One or More)
+router.get("/SearchTrainersByNames", async (req, res) => {
   try {
     const { names } = req.query;
 
