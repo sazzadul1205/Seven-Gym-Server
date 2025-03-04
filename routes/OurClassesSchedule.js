@@ -18,6 +18,37 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get Our_Classes with optional module filtering
+router.get("/SearchModuleData", async (req, res) => {
+  try {
+    const { module } = req.query; // Extract module name from query params
+    let query = {};
+
+    if (module) {
+      query = { "classes.module": module }; // Filter by module name
+    }
+
+    const result = await Our_Classes_ScheduleCollection.find(query).toArray();
+
+    // Extract the relevant fields (id, day, startTime, endTime) from matching classes
+    const filteredResult = result.flatMap((entry) =>
+      entry.classes
+        .filter((cls) => !module || cls.module === module) // Filter classes if module is provided
+        .map((cls) => ({
+          id: cls.id,
+          day: entry.day,
+          startTime: cls.startTime,
+          endTime: cls.endTime,
+        }))
+    );
+
+    res.send(filteredResult);
+  } catch (error) {
+    console.error("Error fetching Our_Classes:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Get Unique Modules
 router.get("/modules", async (req, res) => {
   try {

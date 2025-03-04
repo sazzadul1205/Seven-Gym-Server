@@ -23,8 +23,9 @@ const HomeServices = require("./routes/HomeServices");
 const ClassDetails = require("./routes/ClassDetails");
 const Testimonials = require("./routes/Testimonials");
 const TrainersSchedule = require("./routes/TrainersSchedule");
-const OurClassesSchedule = require("./routes/OurClassesSchedule");
+const OurClassesSchedule = require("./routes/OurClassesSchedule"); // NEW
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
+const DailyTrainersSchedule = require("./routes/DailyTrainersSchedule"); //NEW Temp
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
 // Payment
@@ -62,7 +63,7 @@ app.use("/Trainers", Trainers);
 app.use("/Feedback", Feedback);
 app.use("/TierData", TierData);
 app.use("/Promotions", Promotions);
-app.use("/Our_Classes", OurClasses);
+app.use("/Our_Classes", OurClasses); // Old
 app.use("/Gym_Features", GymFeatures);
 app.use("/Our_Missions", OurMissions);
 app.use("/Testimonials", Testimonials);
@@ -76,6 +77,7 @@ app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 app.use("/Our_Classes_Schedule", OurClassesSchedule); // NEW
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/Create_Payment_Intent", CreatePaymentIntent);
+app.use("/Daily_Trainers_Schedule", DailyTrainersSchedule); //NEW Temp
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 
 // Automatic
