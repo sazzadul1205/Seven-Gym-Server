@@ -3,12 +3,14 @@ const router = express.Router();
 const { client } = require("../config/db");
 
 // Collection for Our_Classes
-const Our_ClassesCollection = client.db("Seven-Gym").collection("Our_Classes");
+const Our_Classes_ScheduleCollection = client
+  .db("Seven-Gym")
+  .collection("Our_Classes_Schedule");
 
 // Get Our_Classes
 router.get("/", async (req, res) => {
   try {
-    const result = await Our_ClassesCollection.find().toArray();
+    const result = await Our_Classes_ScheduleCollection.find().toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Our_Classes:", error);
@@ -19,7 +21,7 @@ router.get("/", async (req, res) => {
 // Get Unique Modules
 router.get("/modules", async (req, res) => {
   try {
-    const result = await Our_ClassesCollection.aggregate([
+    const result = await Our_Classes_ScheduleCollection.aggregate([
       {
         $unwind: "$classes", // Deconstruct the 'classes' array
       },
@@ -53,7 +55,7 @@ router.get("/searchByModule", async (req, res) => {
 
   try {
     // Aggregate query to find the module and get the corresponding days and times
-    const result = await Our_ClassesCollection.aggregate([
+    const result = await Our_Classes_ScheduleCollection.aggregate([
       {
         $unwind: "$classes", // Deconstruct the 'classes' array
       },
@@ -91,7 +93,5 @@ router.get("/searchByModule", async (req, res) => {
     res.status(500).send("Something went wrong.");
   }
 });
-
-// searchByModule?moduleName=Yoga
 
 module.exports = router;

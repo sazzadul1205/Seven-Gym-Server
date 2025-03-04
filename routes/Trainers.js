@@ -224,4 +224,38 @@ router.get("/SearchTrainersByNames", async (req, res) => {
   }
 });
 
+// Temporary Route for Trainer Info
+router.get("/TrainerInfo", async (req, res) => {
+  try {
+    const { name, specialization } = req.query;
+    const query = {};
+
+    // Add name filter if provided
+    if (name) {
+      query.name = { $regex: new RegExp(name, "i") }; // Case-insensitive partial match
+    }
+
+    // Add specialization filter if provided
+    if (specialization) {
+      query.specialization = { $regex: new RegExp(specialization, "i") }; // Case-insensitive search
+    }
+
+    // Fetch trainers based on the constructed query
+    const trainers = await TrainersCollection.find(query).toArray();
+
+    // Map trainers to only include the required fields
+    const result = trainers.map((trainer) => ({
+      name: trainer.name,
+      specialization: trainer.specialization,
+      availableDays: trainer.availableDays,
+      classTypes: trainer.preferences ? trainer.preferences.classTypes : [],
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching trainer info:", error);
+    res.status(500).json({ error: "Something went wrong." });
+  }
+});
+
 module.exports = router;
