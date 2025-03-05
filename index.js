@@ -25,7 +25,6 @@ const Testimonials = require("./routes/Testimonials");
 const TrainersSchedule = require("./routes/TrainersSchedule");
 const OurClassesSchedule = require("./routes/OurClassesSchedule"); // NEW
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
-const DailyTrainersSchedule = require("./routes/DailyTrainersSchedule"); //NEW Temp
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
 // Payment
@@ -77,7 +76,6 @@ app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 app.use("/Our_Classes_Schedule", OurClassesSchedule); // NEW
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/Create_Payment_Intent", CreatePaymentIntent);
-app.use("/Daily_Trainers_Schedule", DailyTrainersSchedule); //NEW Temp
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 
 // Automatic
