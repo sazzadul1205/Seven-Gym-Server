@@ -41,4 +41,33 @@ router.get("/categories", async (req, res) => {
   }
 });
 
+// Add Comment to a Forum Post
+router.post("/:id/comments", async (req, res) => {
+  const { id } = req.params;
+  const { name, email, comment, commentedAt } = req.body;
+
+  if (!name || !email || !comment) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    const updatedThread = await ForumsCollection.findOneAndUpdate(
+      { _id: new ObjectId(id) }, // Ensure to import ObjectId from "mongodb"
+      { $push: { comments: { name, email, comment, commentedAt } } },
+      { returnDocument: "after" }
+    );
+
+    if (!updatedThread) {
+      return res.status(404).json({ error: "Thread not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Comment added successfully", updatedThread });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
 module.exports = router;
