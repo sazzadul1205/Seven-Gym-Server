@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Forums
 const ForumsCollection = client.db("Seven-Gym").collection("Forums");
@@ -40,51 +41,49 @@ router.get("/categories", async (req, res) => {
   }
 });
 
-// Like/Unlike a thread
-router.post("/like/:id", async (req, res) => {
+// Like a thread: add email to likedBy and increment likes
+router.patch("/:id/like", async (req, res) => {
   try {
-    const { email } = req.body; // Get user email from request body
-    const { id } = req.params; // Get thread ID from URL params
+    const { email } = req.body;
+    const threadId = req.params.id;
+    const update = {
+      $inc: { likes: 1 },
+      $addToSet: { likedBy: email }, // add email if not already present
+    };
 
-    if (!email) {
-      return res.status(400).json({ error: "User email is required." });
-    }
+    const updatedThread = await ForumsCollection.findOneAndUpdate(
+      { _id: new ObjectId(threadId) },
+      update,
+      { returnDocument: "after" }
+    );
 
-    const thread = await ForumsCollection.findOne({ _id: new ObjectId(id) });
-
-    if (!thread) {
-      return res.status(404).json({ error: "Thread not found." });
-    }
-
-    const alreadyLiked = thread.likedBy?.includes(email);
-
-    let updatedThread;
-    if (alreadyLiked) {
-      // Unlike: Remove email and decrease like count
-      updatedThread = await ForumsCollection.findOneAndUpdate(
-        { _id: new ObjectId(id) },
-        {
-          $inc: { likes: -1 },
-          $pull: { likedBy: email },
-        },
-        { returnDocument: "after" }
-      );
-    } else {
-      // Like: Add email and increase like count
-      updatedThread = await ForumsCollection.findOneAndUpdate(
-        { _id: new ObjectId(id) },
-        {
-          $inc: { likes: 1 },
-          $addToSet: { likedBy: email },
-        },
-        { returnDocument: "after" }
-      );
-    }
-
-    res.json(updatedThread);
+    res.send(updatedThread.value);
   } catch (error) {
-    console.error("Error updating like:", error);
-    res.status(500).json({ error: "Something went wrong." });
+    console.error("Error liking thread:", error);
+    res.status(500).send("Error liking thread.");
+  }
+});
+
+// Unlike a thread: remove email from likedBy and decrement likes
+router.patch("/:id/unlike", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const threadId = req.params.id;
+    const update = {
+      $inc: { likes: -1 },
+      $pull: { likedBy: email }, // remove email from array
+    };
+
+    const updatedThread = await ForumsCollection.findOneAndUpdate(
+      { _id: new ObjectId(threadId) },
+      update,
+      { returnDocument: "after" }
+    );
+
+    res.send(updatedThread.value);
+  } catch (error) {
+    console.error("Error un-liking thread:", error);
+    res.status(500).send("Error un-liking thread.");
   }
 });
 
