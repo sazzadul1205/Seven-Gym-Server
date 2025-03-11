@@ -70,4 +70,50 @@ router.post("/:id/comment", async (req, res) => {
   }
 });
 
+// Route to toggle like/unlike on a thread
+router.patch("/:id/like", async (req, res) => {
+  const { id } = req.params;
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).send("Email is required to like/unlike a thread.");
+  }
+
+  try {
+    // Find the thread by its id
+    const thread = await ForumsCollection.findOne({ _id: new ObjectId(id) });
+    if (!thread) {
+      return res.status(404).send("Thread not found.");
+    }
+
+    let updateQuery;
+    // Check if the user already liked the thread
+    if (thread.likedBy && thread.likedBy.includes(email)) {
+      // User has liked already so unlike (remove email and decrement likes)
+      updateQuery = {
+        $pull: { likedBy: email },
+        $inc: { likes: -1 },
+      };
+    } else {
+      // User hasn't liked so add like (push email and increment likes)
+      updateQuery = {
+        $push: { likedBy: email },
+        $inc: { likes: 1 },
+      };
+    }
+
+    // Update the thread document and return the updated version
+    const updatedThread = await ForumsCollection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      updateQuery,
+      { returnDocument: "after" }
+    );
+
+    res.send(updatedThread.value);
+  } catch (error) {
+    console.error("Error updating like:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;
