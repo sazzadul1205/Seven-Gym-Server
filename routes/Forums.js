@@ -42,7 +42,7 @@ router.get("/categories", async (req, res) => {
 });
 
 // Add Comment to a Forum Post
-router.post("/:id/comments", async (req, res) => {
+router.post("/:id/comment", async (req, res) => {
   const { id } = req.params;
   const { name, email, comment, commentedAt } = req.body;
 
