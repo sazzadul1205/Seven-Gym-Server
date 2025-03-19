@@ -198,7 +198,14 @@ router.patch("/", async (req, res) => {
 // Update User Tier (PUT API)
 router.put("/Update_User_Tier", async (req, res) => {
   try {
-    const { email, tier, updateTierStart, updateTierEnd, duration } = req.body;
+    const {
+      email,
+      tier,
+      updateTierStart,
+      updateTierEnd,
+      duration,
+      linkedReceptID,
+    } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: "Email is required." });
@@ -218,6 +225,7 @@ router.put("/Update_User_Tier", async (req, res) => {
             duration,
             start: updateTierStart,
             end: updateTierEnd,
+            linkedReceptID,
           },
         }),
     };
