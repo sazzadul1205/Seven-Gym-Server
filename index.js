@@ -27,14 +27,17 @@ const OurClassesSchedule = require("./routes/OurClassesSchedule"); // NEW
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
-// Payment
+// Payment Data
+const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
+const TierUpgradeRefund = require("./routes/Payment/TierUpgradeRefund");
+
+// Payment Intent
 const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
 const StripeRefundIntent = require("./routes/Payment/StripeRefundIntent");
-const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 
 // Automatic
-const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers"); // Import your new cron job route
-const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts"); // Import your new cron job route
+const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
+const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 
 require("dotenv").config();
 const app = express();
@@ -77,14 +80,17 @@ app.use("/Our_Classes_Schedule", OurClassesSchedule); // NEW
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 
-// Payment
+// Payment Data
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
+app.use("/Tier_Upgrade_Refund", TierUpgradeRefund);
+
+// Payment Intent
 app.use("/Stripe_Payment_Intent", StripePaymentIntent);
 app.use("/Stripe_Refund_Intent", StripeRefundIntent);
 
 // Automatic
-app.use("/CheckExpiredTiers", CheckExpiredTiers); // Add the cron job route here
-app.use("/DeleteOldWorkouts", DeleteOldWorkouts); // Add the cron job route here
+app.use("/CheckExpiredTiers", CheckExpiredTiers);
+app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
 
 // Set up the basic route
 app.get("/", (req, res) => {
