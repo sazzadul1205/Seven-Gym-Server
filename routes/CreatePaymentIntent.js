@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const stripe = require("stripe")(
-  "sk_test_51QdwmBFTkipGUF29NDMqKd5f2AnUO9BL6vhkOdmPlrMjFZa022ngqh5rQ0zZ3tmOgtoCsvJjc1i514Q0slD9H1el00nJ8f1WWJ"
+  "sk_test_51R4ijrJHBytQdKdKkNTye13oGWM9QNIwH2R9L5sF1VmXui8Cl5mcWpFgoeHKR95ugOGut4iPvxmPu1Aad4dFsZSy00vyhtZBRl"
 );
 
 // Create Payment Intent
