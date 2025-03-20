@@ -1,8 +1,7 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
-const stripe = require("stripe")(
-  "sk_test_51R4ijrJHBytQdKdKkNTye13oGWM9QNIwH2R9L5sF1VmXui8Cl5mcWpFgoeHKR95ugOGut4iPvxmPu1Aad4dFsZSy00vyhtZBRl"
-);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // Create Payment Intent
 router.post("/", async (req, res) => {
@@ -15,8 +14,8 @@ router.post("/", async (req, res) => {
 
     // Create a PaymentIntent with the specified amount
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(totalPrice), // Amount in cents
-      currency: "usd", // You can change this to your desired currency
+      amount: Math.round(totalPrice * 100), // Convert to cents
+      currency: "usd",
       payment_method_types: ["card"],
     });
 

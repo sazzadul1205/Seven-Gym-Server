@@ -28,7 +28,8 @@ const ClassBookingRequest = require("./routes/ClassBookingRequest");
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
 // Payment
-const CreatePaymentIntent = require("./routes/CreatePaymentIntent");
+const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
+const StripeRefundIntent = require("./routes/Payment/StripeRefundIntent");
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 
 // Automatic
@@ -72,11 +73,14 @@ app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
 app.use("/Home_Services_Section", HomeServices);
 app.use("/Trainers_Schedule", TrainersSchedule);
-app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 app.use("/Our_Classes_Schedule", OurClassesSchedule); // NEW
 app.use("/Class_Booking_Request", ClassBookingRequest);
-app.use("/Create_Payment_Intent", CreatePaymentIntent);
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
+
+// Payment
+app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
+app.use("/Stripe_Payment_Intent", StripePaymentIntent);
+app.use("/Stripe_Refund_Intent", StripeRefundIntent);
 
 // Automatic
 app.use("/CheckExpiredTiers", CheckExpiredTiers); // Add the cron job route here
