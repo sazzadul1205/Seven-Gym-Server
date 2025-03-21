@@ -27,6 +27,9 @@ const OurClassesSchedule = require("./routes/OurClassesSchedule"); // NEW
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
+// User Schedule
+const UserSchedule = require("./routes/UserSchedule/UserSchedule");
+
 // Payment Data
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 const TierUpgradeRefund = require("./routes/Payment/TierUpgradeRefund");
@@ -79,6 +82,9 @@ app.use("/Trainers_Schedule", TrainersSchedule);
 app.use("/Our_Classes_Schedule", OurClassesSchedule); // NEW
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
+
+// User Schedule
+app.use("/User_Schedule", UserSchedule);
 
 // Payment Data
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
