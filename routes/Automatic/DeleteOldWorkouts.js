@@ -8,22 +8,24 @@ const UsersCollection = client.db("Seven-Gym").collection("Users");
 
 // Utility function to delete old workouts
 async function deleteOldWorkouts() {
-  console.log("Maintenance: Deleting workouts older than 8 days...");
+  console.log("Maintenance: Deleting workouts older than 7 days...");
   try {
     const today = new Date();
-    today.setDate(today.getDate() - 8); // Calculate date 8 days ago
-    const cutoffDate = today.toISOString();
+    today.setDate(today.getDate() - 7); // Calculate date 7 days ago
+    const cutoffDate = today.toISOString(); // Convert it to ISO string for comparison
 
     // Fetch all users
     const users = await UsersCollection.find().toArray();
 
     for (const user of users) {
       if (user.recentWorkouts && user.recentWorkouts.length > 0) {
+        // Filter workouts that are older than 7 days based on registeredDateAndTime
         const updatedWorkouts = user.recentWorkouts.filter(
-          (workout) => new Date(workout.date) >= new Date(cutoffDate)
+          (workout) =>
+            new Date(workout.registeredDateAndTime) >= new Date(cutoffDate)
         );
 
-        // Update the user's recentWorkouts array
+        // Update the user's recentWorkouts array with only the valid workouts (within the last 7 days)
         await UsersCollection.updateOne(
           { _id: user._id },
           { $set: { recentWorkouts: updatedWorkouts } }
