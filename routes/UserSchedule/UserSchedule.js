@@ -100,7 +100,7 @@ router.get("/SchedulesEmptyCheck", async (req, res) => {
     scheduleIDs = Array.isArray(scheduleIDs) ? scheduleIDs : [scheduleIDs];
 
     // Fetch user's schedule from the database
-    const userSchedule = await ScheduleCollection.findOne({ email });
+    const userSchedule = await UserScheduleCollection.findOne({ email });
 
     // Check if user exists and has a schedule
     if (!userSchedule || !userSchedule.schedule) {
@@ -145,7 +145,7 @@ router.post("/", async (req, res) => {
     }
 
     // Insert the new schedule into the database
-    const result = await ScheduleCollection.insertOne(scheduleData);
+    const result = await UserScheduleCollection.insertOne(scheduleData);
 
     // If insertion fails
     if (!result.acknowledged) {
@@ -177,7 +177,7 @@ router.put("/AddSchedules", async (req, res) => {
     }
 
     // Find the user's schedule in the database
-    const userSchedule = await ScheduleCollection.findOne({ email });
+    const userSchedule = await UserScheduleCollection.findOne({ email });
 
     // If the user is not found, return a 404 error
     if (!userSchedule) {
@@ -212,7 +212,7 @@ router.put("/AddSchedules", async (req, res) => {
     }
 
     // Save the updated schedule back to the database
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { schedule: userSchedule.schedule } }
     );
@@ -242,7 +242,7 @@ router.put("/DeleteSchedules", async (req, res) => {
     }
 
     // Find the user's schedule from the database
-    const userSchedule = await ScheduleCollection.findOne({ email });
+    const userSchedule = await UserScheduleCollection.findOne({ email });
 
     // If the user is not found, return a 404 error
     if (!userSchedule) {
@@ -278,7 +278,7 @@ router.put("/DeleteSchedules", async (req, res) => {
     }
 
     // Save the updated schedule back to the database
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { schedule: userSchedule.schedule } }
     );
@@ -308,7 +308,7 @@ router.put("/RegenerateNewDaySchedule", async (req, res) => {
     }
 
     // Find the user by email in the database
-    const user = await ScheduleCollection.findOne({ email });
+    const user = await UserScheduleCollection.findOne({ email });
 
     // If user is not found, return a 404 error
     if (!user) {
@@ -323,7 +323,7 @@ router.put("/RegenerateNewDaySchedule", async (req, res) => {
     }
 
     // Update (replace) the schedule for the specified day
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { [`schedule.${dayName}`]: scheduleData } }
     );
@@ -350,7 +350,7 @@ router.put("/AddNotes", async (req, res) => {
     }
 
     // Find the user's schedule in the database
-    const userSchedule = await ScheduleCollection.findOne({ email });
+    const userSchedule = await UserScheduleCollection.findOne({ email });
 
     // If user is not found, return a 404 error
     if (!userSchedule) {
@@ -368,7 +368,7 @@ router.put("/AddNotes", async (req, res) => {
     currentNotes.push(newNote);
 
     // Update the user's schedule with the new notes array
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { notes: currentNotes } }
     );
@@ -394,7 +394,7 @@ router.put("/AddToDo", async (req, res) => {
     }
 
     // Find the user's schedule by email
-    const userSchedule = await ScheduleCollection.findOne({ email });
+    const userSchedule = await UserScheduleCollection.findOne({ email });
 
     // If the user is not found, return a 404 error
     if (!userSchedule) {
@@ -412,7 +412,7 @@ router.put("/AddToDo", async (req, res) => {
     currentTodos.push(newTodo);
 
     // Update the user's schedule with the new todo list
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { todo: currentTodos } }
     );
@@ -438,7 +438,7 @@ router.put("/AddPriority", async (req, res) => {
     }
 
     // Find the user's schedule by email
-    const userSchedule = await ScheduleCollection.findOne({ email });
+    const userSchedule = await UserScheduleCollection.findOne({ email });
 
     // If the user is not found, return a 404 error
     if (!userSchedule) {
@@ -456,7 +456,7 @@ router.put("/AddPriority", async (req, res) => {
     currentPriorities.push(newPriority);
 
     // Update the user's schedule with the new priority list
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { priority: currentPriorities } }
     );
@@ -487,7 +487,7 @@ router.put("/DeleteFullScheduleByEmail", async (req, res) => {
     }
 
     // Find the user by email
-    const scheduleDoc = await ScheduleCollection.findOne({ email });
+    const scheduleDoc = await UserScheduleCollection.findOne({ email });
 
     if (!scheduleDoc) {
       return res
@@ -496,7 +496,7 @@ router.put("/DeleteFullScheduleByEmail", async (req, res) => {
     }
 
     // Replace the existing schedule with the provided schedule
-    const result = await ScheduleCollection.updateOne(
+    const result = await UserScheduleCollection.updateOne(
       { email },
       { $set: { schedule } }
     );
@@ -525,7 +525,7 @@ router.delete("/Schedules/:id", async (req, res) => {
     }
 
     // Delete the schedule by _id
-    const result = await ScheduleCollection.deleteOne({
+    const result = await UserScheduleCollection.deleteOne({
       _id: new ObjectId(id),
     });
 
@@ -553,7 +553,7 @@ router.delete("/DeleteNote", async (req, res) => {
     }
 
     // Find the user's schedule
-    const result = await ScheduleCollection.findOne({ email });
+    const result = await UserScheduleCollection.findOne({ email });
 
     if (!result) {
       return res
@@ -570,7 +570,7 @@ router.delete("/DeleteNote", async (req, res) => {
     }
 
     // Update the document with the new notes array
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { notes: updatedNotes } }
     );
@@ -595,7 +595,7 @@ router.delete("/DeleteToDo", async (req, res) => {
     }
 
     // Find the user's schedule
-    const result = await ScheduleCollection.findOne({ email });
+    const result = await UserScheduleCollection.findOne({ email });
 
     if (!result) {
       return res
@@ -612,7 +612,7 @@ router.delete("/DeleteToDo", async (req, res) => {
     }
 
     // Update the document with the new to-do list
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { todo: updatedToDos } }
     );
@@ -637,7 +637,7 @@ router.delete("/DeletePriority", async (req, res) => {
     }
 
     // Find the user's schedule
-    const result = await ScheduleCollection.findOne({ email });
+    const result = await UserScheduleCollection.findOne({ email });
 
     if (!result) {
       return res
@@ -658,7 +658,7 @@ router.delete("/DeletePriority", async (req, res) => {
     }
 
     // Update the document with the new priority list
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { priority: updatedPriorities } }
     );
@@ -683,7 +683,7 @@ router.delete("/DeletePriority", async (req, res) => {
     }
 
     // Find the user's schedule
-    const result = await ScheduleCollection.findOne({ email });
+    const result = await UserScheduleCollection.findOne({ email });
 
     if (!result) {
       return res
@@ -704,7 +704,7 @@ router.delete("/DeletePriority", async (req, res) => {
     }
 
     // Update the document with the new priority list
-    await ScheduleCollection.updateOne(
+    await UserScheduleCollection.updateOne(
       { email },
       { $set: { priority: updatedPriorities } }
     );

@@ -12,8 +12,7 @@ const Gallery = require("./routes/Gallery");
 const TierData = require("./routes/TierData");
 const Trainers = require("./routes/Trainers");
 const Feedback = require("./routes/Feedback");
-const Schedule = require("./routes/Schedule");
-const OurClasses = require("./routes/OurClasses"); // Old
+const OurClasses = require("./routes/OurClasses");
 const HomeBanner = require("./routes/HomeBanner");
 const Promotions = require("./routes/Promotions");
 const HomeWelcome = require("./routes/HomeWelcome");
@@ -23,7 +22,7 @@ const HomeServices = require("./routes/HomeServices");
 const ClassDetails = require("./routes/ClassDetails");
 const Testimonials = require("./routes/Testimonials");
 const TrainersSchedule = require("./routes/TrainersSchedule");
-const OurClassesSchedule = require("./routes/OurClassesSchedule"); // NEW
+const OurClassesSchedule = require("./routes/OurClassesSchedule");
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
 const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
 
@@ -64,7 +63,6 @@ app.use("/Users", Users);
 app.use("/Forums", Forums);
 app.use("/AboutUs", AboutUs);
 app.use("/Gallery", Gallery);
-app.use("/Schedule", Schedule);
 app.use("/Trainers", Trainers);
 app.use("/Feedback", Feedback);
 app.use("/TierData", TierData);
