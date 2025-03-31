@@ -100,24 +100,37 @@ router.get("/:name/classType/:classType", async (req, res) => {
 });
 
 // Get Trainer_Schedule by Trainer Name
+// Get Trainer Schedule by Trainer Name
 router.get("/ByTrainerName", async (req, res) => {
-  const { trainerName } = req.query; // Extract the Trainer Name from the query parameters
-
-  if (!trainerName) {
-    return res.status(400).send("Trainer Name query parameter is required.");
-  }
-
   try {
-    const result = await Trainers_ScheduleCollection.find({
-      trainerName,
-    }).toArray(); // Filter by Trainer Name
-    if (result.length === 0) {
-      return res.status(404).send("Trainer not found.");
+    const { trainerName } = req.query; // Extract the Trainer Name from query parameters
+
+    if (!trainerName || trainerName.trim() === "") {
+      return res
+        .status(400)
+        .json({ error: "Trainer Name query parameter is required." });
     }
-    res.send(result);
+
+    // Create a case-insensitive search query
+    const query = {
+      trainerName: { $regex: new RegExp(trainerName.trim(), "i") },
+    };
+
+    // Fetch trainer schedule
+    const result = await Trainers_ScheduleCollection.find(query, {
+      projection: { _id: 0, trainerName: 1, schedule: 1 }, // Optional: Select only required fields
+    }).toArray();
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Trainer not found or has no schedule." });
+    }
+
+    res.status(200).json(result); // Send the fetched trainer schedule
   } catch (error) {
-    console.error("Error fetching Trainer_Schedule by trainerName:", error);
-    res.status(500).send("Something went wrong.");
+    console.error("Error fetching Trainer Schedule by trainerName:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

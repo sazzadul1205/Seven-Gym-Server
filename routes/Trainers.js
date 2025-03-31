@@ -5,28 +5,32 @@ const router = express.Router();
 // Collection for Trainers
 const TrainersCollection = client.db("Seven-Gym").collection("Trainers");
 
-// Get Trainers
+// Get Trainers with filtering options
 router.get("/", async (req, res) => {
   try {
     const {
       name,
-      specialization,
       tier,
+      email,
       gender,
-      experienceMin,
-      experienceMax,
       feeMin,
       feeMax,
-      languagesSpoken,
       classType,
       focusArea,
+      experienceMin,
+      experienceMax,
+      languagesSpoken,
+      specialization,
     } = req.query;
 
     const query = {};
 
-    // Add filters to the query only if they are defined
+    // Apply filters only if they are provided
     if (name) {
-      query.name = { $regex: new RegExp(name, "i") }; // Partial match for name
+      query.name = { $regex: new RegExp(name, "i") };
+    }
+    if (email) {
+      query.email = { $regex: new RegExp(email, "i") };
     }
     if (specialization) {
       query.specialization = specialization;
@@ -39,8 +43,8 @@ router.get("/", async (req, res) => {
     }
     if (experienceMin || experienceMax) {
       query.experience = {
-        ...(experienceMin && { $gte: parseInt(experienceMin) }),
-        ...(experienceMax && { $lte: parseInt(experienceMax) }),
+        ...(experienceMin && { $gte: parseInt(experienceMin, 10) }),
+        ...(experienceMax && { $lte: parseInt(experienceMax, 10) }),
       };
     }
     if (feeMin || feeMax) {
@@ -59,16 +63,20 @@ router.get("/", async (req, res) => {
       query["preferences.focusAreas"] = { $in: focusArea.split(",") };
     }
 
-    // If no filters are applied, return all trainers
-    if (Object.keys(query).length === 0) {
+    // Fetch trainers based on filters
+    const result = await TrainersCollection.find(query).toArray();
+
+    // Return all trainers if no filters are applied
+    if (!Object.keys(query).length) {
       return res.send(await TrainersCollection.find().toArray());
     }
 
-    const result = await TrainersCollection.find(query).toArray();
     res.send(result);
   } catch (error) {
-    console.error("Error fetching Trainers:", error);
-    res.status(500).send("Something went wrong.");
+    console.error("Error fetching trainers:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while fetching trainers." });
   }
 });
 
