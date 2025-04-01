@@ -266,4 +266,39 @@ router.get("/TrainerInfo", async (req, res) => {
   }
 });
 
+// Update Class Types for a Trainer
+router.put("/UpdateTrainerClassTypes", async (req, res) => {
+  try {
+    const { email, id, classTypes } = req.body;
+
+    if (!email && !id) {
+      return res.status(400).json({ error: "Email or ID is required." });
+    }
+    if (!classTypes || !Array.isArray(classTypes)) {
+      return res
+        .status(400)
+        .json({ error: "Valid classTypes array is required." });
+    }
+
+    const query = email ? { email } : { _id: new ObjectId(id) };
+
+    const update = {
+      $set: { "preferences.classTypes": classTypes },
+    };
+
+    const result = await TrainersCollection.updateOne(query, update);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({ message: "Class types updated successfully." });
+  } catch (error) {
+    console.error("Error updating class types:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while updating class types." });
+  }
+});
+
 module.exports = router;
