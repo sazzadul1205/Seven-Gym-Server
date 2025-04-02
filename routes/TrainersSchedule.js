@@ -121,4 +121,35 @@ router.get("/ByTrainerName", async (req, res) => {
   }
 });
 
+// Update Trainer's Schedule Endpoint
+router.put("/Update", async (req, res) => {
+  // Extract the trainer's name and updated schedule from the request body
+  const { trainerName, trainerSchedule } = req.body;
+
+  // Validate that both trainerName and trainerSchedule are provided
+  if (!trainerName || !trainerSchedule) {
+    return res.status(400).send("Trainer name and schedule are required.");
+  }
+
+  try {
+    // Attempt to update the trainer's schedule in the database
+    const result = await Trainers_ScheduleCollection.updateOne(
+      { trainerName: trainerName }, // Find the trainer by their name
+      { $set: { trainerSchedule: trainerSchedule } } // Update the trainer's schedule with the new data
+    );
+
+    // Check if the trainer was found and updated in the database
+    if (result.matchedCount === 0) {
+      return res.status(404).send("Trainer not found.");
+    }
+
+    // Send a success response if the update was successful
+    res.send("Trainer schedule updated successfully.");
+  } catch (error) {
+    // Log the error for debugging and send a server error response
+    console.error("Error updating Trainer's Schedule:", error);
+    res.status(500).send("Something went wrong while updating the schedule.");
+  }
+});
+
 module.exports = router;
