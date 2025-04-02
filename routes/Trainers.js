@@ -1,3 +1,4 @@
+const { ObjectId } = require("mongodb");
 const { client } = require("../config/db");
 const express = require("express");
 const router = express.Router();
@@ -298,6 +299,87 @@ router.put("/UpdateTrainerClassTypes", async (req, res) => {
     res
       .status(500)
       .json({ error: "Something went wrong while updating class types." });
+  }
+});
+
+// Update Trainer Header Information : specialization, imageUrl
+router.put("/UpdateTrainerHeaderInfo/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { specialization, imageUrl } = req.body;
+
+    // Ensure at least one field is provided for an update
+    if (!specialization && !imageUrl) {
+      return res
+        .status(400)
+        .json({ error: "At least one field is required for update." });
+    }
+
+    // Build update object dynamically
+    const updateFields = {};
+    if (specialization) updateFields.specialization = specialization;
+    if (imageUrl) updateFields.imageUrl = imageUrl;
+
+    // Update the trainer's profile in the main collection
+    const result = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({
+      message: "Trainer profile updated successfully.",
+      updatedFields: updateFields,
+    });
+  } catch (error) {
+    console.error("Error updating trainer profile:", error.message);
+    res.status(500).json({
+      error: "Something went wrong while updating the trainer profile.",
+    });
+  }
+});
+
+// Update Trainer About Information : bio, experience, age
+router.put("/UpdateTrainerAboutInfo/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bio, experience, age } = req.body;
+
+    // Ensure at least one field is provided for an update
+    if (!bio && !experience && !age) {
+      return res
+        .status(400)
+        .json({ error: "At least one field is required for update." });
+    }
+
+    // Build update object dynamically
+    const updateFields = {};
+    if (bio) updateFields.bio = bio;
+    if (experience) updateFields.experience = parseInt(experience, 10);
+    if (age) updateFields.age = parseInt(age, 10);
+
+    // Update the trainer's profile in the collection
+    const result = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({
+      message: "Trainer profile updated successfully.",
+      updatedFields: updateFields,
+    });
+  } catch (error) {
+    console.error("Error updating trainer profile:", error.message);
+    res.status(500).json({
+      error: "Something went wrong while updating the trainer profile.",
+    });
   }
 });
 
