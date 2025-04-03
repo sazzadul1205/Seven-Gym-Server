@@ -383,4 +383,50 @@ router.put("/UpdateTrainerAboutInfo/:id", async (req, res) => {
   }
 });
 
+// Update Trainer Contact Information
+router.put("/UpdateTrainerContactInfo/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { contact } = req.body;
+
+    // Validate ID
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid trainer ID." });
+    }
+
+    // Ensure at least one field is provided for update
+    if (!contact || Object.keys(contact).length === 0) {
+      return res
+        .status(400)
+        .json({ error: "At least one contact field is required for update." });
+    }
+
+    // Dynamically update contact fields
+    const updateFields = {};
+    if (contact && typeof contact === "object") {
+      updateFields.contact = { ...contact };
+    }
+
+    // Update the trainer's profile in the database
+    const result = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({
+      message: "Trainer contact information updated successfully.",
+      updatedFields: updateFields,
+    });
+  } catch (error) {
+    console.error("Error updating trainer profile:", error);
+    res.status(500).json({
+      error: "Something went wrong while updating the trainer profile.",
+    });
+  }
+});
+
 module.exports = router;
