@@ -429,4 +429,83 @@ router.put("/UpdateTrainerContactInfo/:id", async (req, res) => {
   }
 });
 
+// Update Trainer Details Information
+router.put("/UpdateTrainerDetailsInfo/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      certifications,
+      awards,
+      preferences,
+      languagesSpoken,
+      additionalServices,
+      equipmentUsed,
+      partnerships,
+    } = req.body;
+
+    // Ensure at least one field is provided for an update
+    if (
+      !certifications &&
+      !awards &&
+      !preferences &&
+      !languagesSpoken &&
+      !additionalServices &&
+      !equipmentUsed &&
+      !partnerships
+    ) {
+      return res
+        .status(400)
+        .json({ error: "At least one field is required for update." });
+    }
+
+    // Build update object dynamically
+    const updateFields = {};
+
+    if (certifications) updateFields.certifications = certifications;
+    if (awards) {
+      updateFields.awards = awards.map((award) => ({
+        title: award.title,
+        year: award.year,
+        organization: award.organization,
+      }));
+    }
+    if (preferences) {
+      updateFields.preferences = {
+        focusAreas: preferences.focusAreas || [],
+        classTypes: preferences.classTypes || [],
+      };
+    }
+    if (languagesSpoken) updateFields.languagesSpoken = languagesSpoken;
+    if (additionalServices)
+      updateFields.additionalServices = additionalServices;
+    if (equipmentUsed) updateFields.equipmentUsed = equipmentUsed;
+    if (partnerships) {
+      updateFields.partnerships = partnerships.map((partnership) => ({
+        partnerName: partnership.partnerName,
+        website: partnership.website,
+      }));
+    }
+
+    // Update the trainer's profile in the collection
+    const result = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({
+      message: "Trainer profile updated successfully.",
+      updatedFields: updateFields,
+    });
+  } catch (error) {
+    console.error("Error updating trainer profile:", error.message);
+    res.status(500).json({
+      error: "Something went wrong while updating the trainer profile.",
+    });
+  }
+});
+
 module.exports = router;
