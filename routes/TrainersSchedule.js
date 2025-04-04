@@ -120,6 +120,55 @@ router.get("/:name/classType/:classType", async (req, res, next) => {
   }
 });
 
+// Get the next session after a specific time on a specific day
+router.get("/SelectedSession", async (req, res, next) => {
+  const { trainerId, trainerName, day, time } = req.query;
+
+  if (!day || !time || (!trainerId && !trainerName)) {
+    return res.status(400).json({ error: "Missing required parameters." });
+  }
+
+  try {
+    const trainer = await Trainers_ScheduleCollection.findOne(
+      trainerId
+        ? { _id: trainerId }
+        : { trainerName: { $regex: new RegExp(`^${trainerName}$`, "i") } }
+    );
+
+    if (!trainer) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    const { trainerSchedule } = trainer;
+
+    if (!trainerSchedule || !trainerSchedule[day]) {
+      return res.status(404).json({ error: `No schedule found for ${day}.` });
+    }
+
+    const daySchedule = trainerSchedule[day];
+    const times = Object.keys(daySchedule).sort(); // Sort times ascending
+
+    // Find the next time slot after the provided time
+    const nextTime = times.find((t) => t > time);
+
+    if (!nextTime) {
+      return res
+        .status(404)
+        .json({ error: `No session found after ${time} on ${day}.` });
+    }
+
+    res.json({
+      trainerName: trainer.trainerName,
+      day,
+      time: nextTime,
+      session: daySchedule[nextTime],
+    });
+  } catch (error) {
+    console.error("Error fetching next session:", error);
+    next(error);
+  }
+});
+
 // Get Trainer_Schedule by Trainer Name
 router.get("/ByTrainerName", async (req, res) => {
   const { trainerName } = req.query; // Extract the Trainer Name from the query parameters
