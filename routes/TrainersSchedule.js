@@ -19,24 +19,30 @@ router.get("/", async (req, res) => {
 });
 
 // Get Trainer's Weekly Schedule for a Specific Time
-router.get("/:name/time/:time", async (req, res) => {
+router.get("/:name/time/:time", async (req, res, next) => {
   const { name, time } = req.params;
 
   try {
-    // Fetch the trainer's data by name
-    const trainer = await Trainers_ScheduleCollection.findOne({ name });
+    // Find trainer by name (case-insensitive)
+    const trainer = await Trainers_ScheduleCollection.findOne({
+      trainerName: { $regex: new RegExp(`^${name}$`, "i") },
+    });
 
     if (!trainer) {
-      return res.status(404).send("Trainer not found.");
+      return res.status(404).json({ error: "Trainer not found." });
     }
 
-    const weeklyData = Object.entries(trainer.scheduleWithPrices).reduce(
+    const { trainerSchedule } = trainer;
+
+    if (!trainerSchedule || Object.keys(trainerSchedule).length === 0) {
+      return res.status(404).json({ error: "Trainer has no schedule data." });
+    }
+
+    // Extract matching sessions for the given time
+    const weeklyData = Object.entries(trainerSchedule).reduce(
       (result, [day, sessions]) => {
-        const filteredSessions = sessions.filter(
-          (session) => session.timeStart === time
-        );
-        if (filteredSessions.length > 0) {
-          result[day] = filteredSessions;
+        if (sessions[time]) {
+          result[day] = sessions[time];
         }
         return result;
       },
@@ -44,38 +50,53 @@ router.get("/:name/time/:time", async (req, res) => {
     );
 
     if (Object.keys(weeklyData).length === 0) {
-      return res.status(404).send("No sessions found for the given time.");
+      return res.status(404).json({ error: `No sessions found at ${time}.` });
     }
 
-    res.send({
-      name: trainer.name,
-      schedule: weeklyData, // returning the filtered schedule
+    res.json({
+      trainerName: trainer.trainerName,
+      schedule: weeklyData,
     });
   } catch (error) {
     console.error("Error fetching trainer's schedule:", error);
-    res.status(500).send("Something went wrong.");
+    next(error);
   }
 });
 
 // Get Trainer's Weekly Schedule for a Specific Class Type
-router.get("/:name/classType/:classType", async (req, res) => {
+router.get("/:name/classType/:classType", async (req, res, next) => {
   const { name, classType } = req.params;
 
   try {
-    // Fetch the trainer's data by name
-    const trainer = await Trainers_ScheduleCollection.findOne({ name });
+    // Find trainer by name (case-insensitive)
+    const trainer = await Trainers_ScheduleCollection.findOne({
+      trainerName: { $regex: new RegExp(`^${name}$`, "i") },
+    });
 
     if (!trainer) {
-      return res.status(404).send("Trainer not found.");
+      return res.status(404).json({ error: "Trainer not found." });
     }
 
-    // Filter schedule by classType for each day
-    const weeklyData = Object.entries(trainer.scheduleWithPrices).reduce(
+    const { trainerSchedule } = trainer;
+
+    if (!trainerSchedule || Object.keys(trainerSchedule).length === 0) {
+      return res.status(404).json({ error: "Trainer has no schedule data." });
+    }
+
+    // Extract matching sessions for the given class type
+    const weeklyData = Object.entries(trainerSchedule).reduce(
       (result, [day, sessions]) => {
-        const filteredSessions = sessions.filter(
-          (session) => session.classType === classType
+        const filteredSessions = Object.entries(sessions).reduce(
+          (acc, [time, session]) => {
+            if (session.classType.toLowerCase() === classType.toLowerCase()) {
+              acc[time] = session;
+            }
+            return acc;
+          },
+          {}
         );
-        if (filteredSessions.length > 0) {
+
+        if (Object.keys(filteredSessions).length > 0) {
           result[day] = filteredSessions;
         }
         return result;
@@ -86,16 +107,16 @@ router.get("/:name/classType/:classType", async (req, res) => {
     if (Object.keys(weeklyData).length === 0) {
       return res
         .status(404)
-        .send(`No sessions found for class type "${classType}".`);
+        .json({ error: `No sessions found for class type "${classType}".` });
     }
 
-    res.send({
-      name: trainer.name,
-      schedule: weeklyData, // returning the filtered schedule
+    res.json({
+      trainerName: trainer.trainerName,
+      schedule: weeklyData,
     });
   } catch (error) {
     console.error("Error fetching trainer's schedule:", error);
-    res.status(500).send("Something went wrong.");
+    next(error);
   }
 });
 
