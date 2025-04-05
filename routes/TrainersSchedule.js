@@ -146,26 +146,59 @@ router.get("/SelectedSession", async (req, res, next) => {
     }
 
     const daySchedule = trainerSchedule[day];
-    const times = Object.keys(daySchedule).sort(); // Sort times ascending
 
-    // Find the next time slot after the provided time
-    const nextTime = times.find((t) => t > time);
-
-    if (!nextTime) {
-      return res
-        .status(404)
-        .json({ error: `No session found after ${time} on ${day}.` });
+    // Return the session only if it exactly matches the provided time.
+    if (daySchedule[time]) {
+      return res.json({
+        trainerName: trainer.trainerName,
+        day,
+        time,
+        session: daySchedule[time],
+      });
     }
 
-    res.json({
-      trainerName: trainer.trainerName,
-      day,
-      time: nextTime,
-      session: daySchedule[nextTime],
-    });
+    // If no exact match is found, return a 404 error.
+    return res
+      .status(404)
+      .json({ error: `No session found at ${time} on ${day}.` });
   } catch (error) {
-    console.error("Error fetching next session:", error);
+    console.error("Error fetching session:", error);
     next(error);
+  }
+});
+
+
+router.get("/SameClassTypeSession", async (req, res) => {
+  const { trainerName, classType } = req.query;
+
+  try {
+    // Fetch the trainer's schedule by name
+    const trainer = await Trainers_ScheduleCollection.findOne({ trainerName });
+
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found." });
+    }
+
+    const schedule = trainer.trainerSchedule;
+    const matchedSlots = [];
+
+    // Loop through each day and time slot
+    for (const day in schedule) {
+      for (const time in schedule[day]) {
+        const slot = schedule[day][time];
+        if (slot.classType === classType) {
+          matchedSlots.push({
+            ...slot,
+            day,
+          });
+        }
+      }
+    }
+
+    res.json(matchedSlots);
+  } catch (error) {
+    console.error("Error filtering schedule:", error);
+    res.status(500).send("Something went wrong.");
   }
 });
 
