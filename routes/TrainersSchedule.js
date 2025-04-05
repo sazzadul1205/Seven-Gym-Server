@@ -18,108 +18,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get Trainer's Weekly Schedule for a Specific Time
-router.get("/:name/time/:time", async (req, res, next) => {
-  const { name, time } = req.params;
-
-  try {
-    // Find trainer by name (case-insensitive)
-    const trainer = await Trainers_ScheduleCollection.findOne({
-      trainerName: { $regex: new RegExp(`^${name}$`, "i") },
-    });
-
-    if (!trainer) {
-      return res.status(404).json({ error: "Trainer not found." });
-    }
-
-    const { trainerSchedule } = trainer;
-
-    if (!trainerSchedule || Object.keys(trainerSchedule).length === 0) {
-      return res.status(404).json({ error: "Trainer has no schedule data." });
-    }
-
-    // Extract matching sessions for the given time
-    const weeklyData = Object.entries(trainerSchedule).reduce(
-      (result, [day, sessions]) => {
-        if (sessions[time]) {
-          result[day] = sessions[time];
-        }
-        return result;
-      },
-      {}
-    );
-
-    if (Object.keys(weeklyData).length === 0) {
-      return res.status(404).json({ error: `No sessions found at ${time}.` });
-    }
-
-    res.json({
-      trainerName: trainer.trainerName,
-      schedule: weeklyData,
-    });
-  } catch (error) {
-    console.error("Error fetching trainer's schedule:", error);
-    next(error);
-  }
-});
-
-// Get Trainer's Weekly Schedule for a Specific Class Type
-router.get("/:name/classType/:classType", async (req, res, next) => {
-  const { name, classType } = req.params;
-
-  try {
-    // Find trainer by name (case-insensitive)
-    const trainer = await Trainers_ScheduleCollection.findOne({
-      trainerName: { $regex: new RegExp(`^${name}$`, "i") },
-    });
-
-    if (!trainer) {
-      return res.status(404).json({ error: "Trainer not found." });
-    }
-
-    const { trainerSchedule } = trainer;
-
-    if (!trainerSchedule || Object.keys(trainerSchedule).length === 0) {
-      return res.status(404).json({ error: "Trainer has no schedule data." });
-    }
-
-    // Extract matching sessions for the given class type
-    const weeklyData = Object.entries(trainerSchedule).reduce(
-      (result, [day, sessions]) => {
-        const filteredSessions = Object.entries(sessions).reduce(
-          (acc, [time, session]) => {
-            if (session.classType.toLowerCase() === classType.toLowerCase()) {
-              acc[time] = session;
-            }
-            return acc;
-          },
-          {}
-        );
-
-        if (Object.keys(filteredSessions).length > 0) {
-          result[day] = filteredSessions;
-        }
-        return result;
-      },
-      {}
-    );
-
-    if (Object.keys(weeklyData).length === 0) {
-      return res
-        .status(404)
-        .json({ error: `No sessions found for class type "${classType}".` });
-    }
-
-    res.json({
-      trainerName: trainer.trainerName,
-      schedule: weeklyData,
-    });
-  } catch (error) {
-    console.error("Error fetching trainer's schedule:", error);
-    next(error);
-  }
-});
-
 // Get the next session after a specific time on a specific day
 router.get("/SelectedSession", async (req, res, next) => {
   const { trainerId, trainerName, day, time } = req.query;
@@ -167,6 +65,43 @@ router.get("/SelectedSession", async (req, res, next) => {
   }
 });
 
+// Get all sessions for a trainer on a specific Time
+router.get("/SameStartSession", async (req, res) => {
+  const { trainerName, start } = req.query;
+
+  if (!trainerName || !start) {
+    return res
+      .status(400)
+      .json({ message: "Missing trainerName or start time in query." });
+  }
+
+  try {
+    const trainer = await Trainers_ScheduleCollection.findOne({ trainerName });
+
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found." });
+    }
+
+    const schedule = trainer.trainerSchedule;
+    const matchedSlots = [];
+
+    // Go through each day
+    for (const day in schedule) {
+      const timeSlot = schedule[day][start];
+      if (timeSlot) {
+        matchedSlots.push({
+          ...timeSlot,
+          day,
+        });
+      }
+    }
+
+    res.json(matchedSlots);
+  } catch (error) {
+    console.error("Error fetching sessions at same start time:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
 
 router.get("/SameClassTypeSession", async (req, res) => {
   const { trainerName, classType } = req.query;
