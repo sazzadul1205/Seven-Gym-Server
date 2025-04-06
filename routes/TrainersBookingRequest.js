@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Trainers_Booking_Request
 const Trainers_Booking_RequestCollection = client
@@ -65,6 +66,31 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Error creating Trainers_Booking_Request:", error);
     res.status(500).send("Something went wrong.");
+  }
+});
+
+// DELETE Trainer by ID
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid booking ID format" });
+  }
+
+  try {
+    const result = await Trainers_Booking_RequestCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.status(200).json({ message: "Booking deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error deleting booking", error: error.message });
   }
 });
 
