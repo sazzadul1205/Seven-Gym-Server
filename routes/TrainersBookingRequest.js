@@ -18,6 +18,28 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get Trainers Booking Request by bookerEmail
+router.get("/Booker/:bookerEmail", async (req, res) => {
+  try {
+    const { bookerEmail } = req.params; // Get bookerEmail from the route parameter
+
+    // Query the database for bookings with the specific bookerEmail
+    const result = await Trainers_Booking_RequestCollection.find({
+      bookerEmail,
+    }).toArray();
+
+    // If no bookings are found
+    if (result.length === 0) {
+      return res.status(404).send("No bookings found for this booker.");
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching Trainers_Booking_Request:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Post request to create a new booking request
 router.post("/", async (req, res) => {
   try {
