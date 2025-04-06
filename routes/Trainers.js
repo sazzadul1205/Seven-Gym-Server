@@ -20,8 +20,8 @@ router.get("/", async (req, res) => {
       focusArea,
       experienceMin,
       experienceMax,
-      languagesSpoken,
       specialization,
+      languagesSpoken,
     } = req.query;
 
     const query = {};

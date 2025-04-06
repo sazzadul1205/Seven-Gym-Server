@@ -159,6 +159,64 @@ router.get("/ByTrainerName", async (req, res) => {
   }
 });
 
+// GET route to fetch sessions by IDs via query
+router.get("/ByID", async (req, res) => {
+  let { ids } = req.query;
+
+  // If no ids provided, return empty list
+  if (!ids) {
+    return res.json([]);
+  }
+
+  // Normalize to array
+  if (!Array.isArray(ids)) {
+    ids = [ids];
+  }
+
+  try {
+    const result = [];
+
+    // Group IDs by trainerName so we only fetch each trainer once
+    const byTrainer = ids.reduce((acc, id) => {
+      const [trainerName] = id.split("-");
+      const key = trainerName;
+      acc[key] = acc[key] || [];
+      acc[key].push(id);
+      return acc;
+    }, {});
+
+    // For each trainer, fetch just that schedule document
+    for (const trainerKey of Object.keys(byTrainer)) {
+      const trainerName = trainerKey.replace(/_/g, " ");
+      const scheduleDoc = await Trainers_ScheduleCollection.findOne({
+        trainerName,
+      });
+
+      if (!scheduleDoc || !scheduleDoc.trainerSchedule) continue;
+
+      for (const id of byTrainer[trainerKey]) {
+        const [, day, time] = id.split("-");
+        const entry =
+          scheduleDoc.trainerSchedule[day] &&
+          scheduleDoc.trainerSchedule[day][time];
+
+        if (entry && entry.id === id) {
+          result.push({
+            day,
+            time,
+            ...entry,
+          });
+        }
+      }
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error fetching sessions by IDs:", error);
+    return res.status(500).send("Something went wrong.");
+  }
+});
+
 // Update Trainer's Schedule Endpoint
 router.put("/Update", async (req, res) => {
   // Extract the trainer's name and updated schedule from the request body
