@@ -59,4 +59,10 @@ router.get("/status", (req, res) => {
 
 console.log("Delete Old Workouts is running");
 
+// Manual trigger route (for development/testing only)
+router.get("/RunNow", async (req, res) => {
+  await deleteOldWorkouts();
+  res.send("Manual check completed.");
+});
+
 module.exports = router;

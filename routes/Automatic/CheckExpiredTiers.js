@@ -61,6 +61,13 @@ router.get("/", (req, res) => {
 router.get("/status", (req, res) => {
   res.send("Scheduled maintenance is set to run daily at midnight.");
 });
+
 console.log("Check Expired Tiers is running");
+
+// Manual trigger route (for development/testing only)
+router.get("/RunNow", async (req, res) => {
+  await checkExpiredTiers();
+  res.send("Manual check completed.");
+});
 
 module.exports = router;

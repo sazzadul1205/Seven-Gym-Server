@@ -10,7 +10,6 @@ const Forums = require("./routes/Forums");
 const AboutUs = require("./routes/AboutUs");
 const Gallery = require("./routes/Gallery");
 const TierData = require("./routes/TierData");
-const Trainers = require("./routes/Trainers");
 const Feedback = require("./routes/Feedback");
 const OurClasses = require("./routes/OurClasses");
 const HomeBanner = require("./routes/HomeBanner");
@@ -21,25 +20,29 @@ const GymFeatures = require("./routes/GymFeatures");
 const HomeServices = require("./routes/HomeServices");
 const ClassDetails = require("./routes/ClassDetails");
 const Testimonials = require("./routes/Testimonials");
-const TrainersSchedule = require("./routes/TrainersSchedule");
 const OurClassesSchedule = require("./routes/OurClassesSchedule");
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
-const TrainersBookingRequest = require("./routes/TrainersBookingRequest");
+
+// Trainer Data
+const Trainers = require("./routes/TrainerData/Trainers");
+const TrainersSchedule = require("./routes/TrainerData/TrainersSchedule");
+const TrainersBookingRequest = require("./routes/TrainerData/TrainersBookingRequest");
 
 // User Schedule
 const UserSchedule = require("./routes/UserSchedule/UserSchedule");
 
 // Payment Data
-const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 const TierUpgradeRefund = require("./routes/Payment/TierUpgradeRefund");
+const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
 
 // Payment Intent
-const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
 const StripeRefundIntent = require("./routes/Payment/StripeRefundIntent");
+const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
 
 // Automatic
 const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
 const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
+const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
 
 require("dotenv").config();
 const app = express();
@@ -63,11 +66,10 @@ app.use("/Users", Users);
 app.use("/Forums", Forums);
 app.use("/AboutUs", AboutUs);
 app.use("/Gallery", Gallery);
-app.use("/Trainers", Trainers);
 app.use("/Feedback", Feedback);
 app.use("/TierData", TierData);
 app.use("/Promotions", Promotions);
-app.use("/Our_Classes", OurClasses); // Old
+app.use("/Our_Classes", OurClasses);
 app.use("/Gym_Features", GymFeatures);
 app.use("/Our_Missions", OurMissions);
 app.use("/Testimonials", Testimonials);
@@ -76,25 +78,29 @@ app.use("/Home_Banner_Section", HomeBanner);
 app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
 app.use("/Home_Services_Section", HomeServices);
-app.use("/Trainers_Schedule", TrainersSchedule);
-app.use("/Our_Classes_Schedule", OurClassesSchedule); // NEW
+app.use("/Our_Classes_Schedule", OurClassesSchedule);
 app.use("/Class_Booking_Request", ClassBookingRequest);
+
+// Trainer Data
+app.use("/Trainers", Trainers);
+app.use("/Trainers_Schedule", TrainersSchedule);
 app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 
 // User Schedule
 app.use("/User_Schedule", UserSchedule);
 
 // Payment Data
-app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 app.use("/Tier_Upgrade_Refund", TierUpgradeRefund);
+app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 
 // Payment Intent
-app.use("/Stripe_Payment_Intent", StripePaymentIntent);
 app.use("/Stripe_Refund_Intent", StripeRefundIntent);
+app.use("/Stripe_Payment_Intent", StripePaymentIntent);
 
 // Automatic
 app.use("/CheckExpiredTiers", CheckExpiredTiers);
 app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
+app.use("/BookingSessionExpire", BookingSessionExpire);
 
 // Set up the basic route
 app.get("/", (req, res) => {
