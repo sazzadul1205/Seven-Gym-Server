@@ -25,22 +25,44 @@ const checkExpiredPendingBookings = async () => {
       status: "Pending",
     }).toArray();
 
-    const outdatedIds = pendingBookings
-      .filter((booking) => {
-        const bookedDate = parseCustomDate(booking.bookedAt);
-        const diffDays = Math.floor((now - bookedDate) / (1000 * 60 * 60 * 24));
-        return diffDays >= 7;
-      })
-      .map((booking) => booking._id);
+    const outdatedBookings = pendingBookings.filter((booking) => {
+      const bookedDate = parseCustomDate(booking.bookedAt);
+      const diffDays = Math.floor((now - bookedDate) / (1000 * 60 * 60 * 24));
+      return diffDays >= 7;
+    });
 
-    if (outdatedIds.length > 0) {
+    if (outdatedBookings.length > 0) {
+      const expiredBookings = outdatedBookings.map((booking) => {
+        // Format the expiredAt date in the desired format: DD-MM-YYYY T HH:MM
+        const expiredAt = `${now.getDate().toString().padStart(2, "0")}-${(
+          now.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}-${now.getFullYear()}T${now
+          .getHours()
+          .toString()
+          .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+        return {
+          ...booking,
+          expiredAt,
+        };
+      });
+
+      const expiredIds = expiredBookings.map((booking) => booking._id);
+
       await Trainers_Booking_RequestCollection.updateMany(
-        { _id: { $in: outdatedIds } },
-        { $set: { status: "Expired" } }
+        { _id: { $in: expiredIds } },
+        {
+          $set: {
+            status: "Expired",
+            expiredAt: expiredBookings[0].expiredAt, // Set expiredAt field for the first item
+          },
+        }
       );
 
       console.log(
-        `✅ ${outdatedIds.length} outdated bookings marked as Expired.`
+        `✅ ${expiredBookings.length} outdated bookings marked as Expired & expiredAt added.`
       );
     } else {
       console.log("No outdated pending bookings found.");
