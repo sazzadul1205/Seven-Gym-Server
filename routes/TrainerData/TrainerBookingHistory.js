@@ -11,7 +11,13 @@ const Trainer_Booking_HistoryCollection = client
 // Get Trainer_Booking_History
 router.get("/", async (req, res) => {
   try {
-    const result = await Trainer_Booking_HistoryCollection.find().toArray();
+    const { email } = req.query;
+
+    const query = email ? { bookerEmail: email } : {};
+
+    const result = await Trainer_Booking_HistoryCollection.find(
+      query
+    ).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainer_Booking_History:", error);
@@ -27,9 +33,6 @@ router.post("/", async (req, res) => {
     if (!newRequest || !newRequest.status) {
       return res.status(400).send("Invalid request data. Status is required.");
     }
-
-    // You can add more validation for other fields (e.g., 'deletedAt' or other properties)
-    console.log("Received booking request:", newRequest); // Log the incoming data
 
     const result = await Trainer_Booking_HistoryCollection.insertOne(
       newRequest
