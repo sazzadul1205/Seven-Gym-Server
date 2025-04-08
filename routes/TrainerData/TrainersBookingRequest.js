@@ -41,6 +41,26 @@ router.get("/Booker/:bookerEmail", async (req, res) => {
   }
 });
 
+// GET all booking requests for a specific trainer (using route param)
+router.get("/Trainer/:trainerName", async (req, res) => {
+  const { trainerName } = req.params;
+
+  if (!trainerName) {
+    return res.status(400).send("Trainer name is required.");
+  }
+
+  try {
+    const result = await Trainers_Booking_RequestCollection.find({
+      trainer: trainerName,
+    }).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching trainer bookings:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 // Post request to create a new booking request
 router.post("/", async (req, res) => {
   try {
