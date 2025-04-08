@@ -49,6 +49,33 @@ router.get("/check-email", async (req, res) => {
   }
 });
 
+// If Email is Given I will get the Role
+router.get("/UserRole", async (req, res) => {
+  try {
+    const email = req.query.email;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "Email query parameter is required." });
+    }
+
+    const user = await UsersCollection.findOne(
+      { email },
+      { projection: { role: 1, _id: 0 } } // only fetch role, exclude _id
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ role: user.role });
+  } catch (error) {
+    console.error("Error fetching user role:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 // Create User (POST API)
 router.post("/", async (req, res) => {
   try {
