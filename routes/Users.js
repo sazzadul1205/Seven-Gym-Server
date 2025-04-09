@@ -27,6 +27,38 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get user's name and profile image by email
+router.get("/BasicProfile", async (req, res) => {
+  try {
+    const email = req.query.email;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email query is required." });
+    }
+
+    const user = await UsersCollection.findOne(
+      { email },
+      {
+        projection: {
+          fullName: 1,
+          profileImage: 1,
+          email: 1,
+          _id: 0, // Optional: exclude _id if not needed
+        },
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching basic profile:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 // Check if email exists (GET API)
 router.get("/check-email", async (req, res) => {
   try {
