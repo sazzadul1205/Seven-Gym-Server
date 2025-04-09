@@ -217,7 +217,6 @@ router.get("/ByID", async (req, res) => {
   }
 });
 
-
 // Update Trainer's Schedule Endpoint
 router.put("/Update", async (req, res) => {
   // Extract the trainer's name and updated schedule from the request body
@@ -286,43 +285,52 @@ router.post("/SessionValidation", async (req, res) => {
 module.exports = router;
 
 function checkBookingValidity(booking, trainerSchedule) {
+  const notFoundIds = [];
+  const fullIds = [];
+
   // Loop through each session in the booking.
   for (let sessionId of booking.sessions) {
     let found = false;
     let sessionFull = false;
-    // Iterate through each day in the trainer's schedule.
+
     for (let day in trainerSchedule) {
       for (let time in trainerSchedule[day]) {
-        let session = trainerSchedule[day][time];
+        const session = trainerSchedule[day][time];
         if (session.id === sessionId) {
           found = true;
-          // Count the number of participants (assumes 'participant' is an object with keys)
           const participantCount = session.participant
             ? Object.keys(session.participant).length
             : 0;
           if (participantCount >= session.participantLimit) {
             sessionFull = true;
           }
-          break; // Stop iterating time slots once session is found.
+          break; // Stop looking at times once found
         }
       }
-      if (found) break; // Found session on this day; no need to check further days.
+      if (found) break; // Stop looking at days once found
     }
-    // If session wasn't found in schedule, return invalid with reason.
+
     if (!found) {
-      return {
-        valid: false,
-        reason: `wrong class selected for session id: ${sessionId}`,
-      };
-    }
-    // If the session was found but is full, return invalid.
-    if (sessionFull) {
-      return {
-        valid: false,
-        reason: `class full for session id: ${sessionId}`,
-      };
+      notFoundIds.push(sessionId);
+    } else if (sessionFull) {
+      fullIds.push(sessionId);
     }
   }
-  // All sessions passed validation.
+
+  // Compose result
+  if (notFoundIds.length > 0) {
+    return {
+      valid: false,
+      reason: `wrong class selected for session id: ${notFoundIds.join(", ")}`,
+    };
+  }
+
+  if (fullIds.length > 0) {
+    return {
+      valid: false,
+      reason: `class full for session id: ${fullIds.join(", ")}`,
+    };
+  }
+
   return { valid: true };
 }

@@ -77,7 +77,7 @@ router.get("/modules", async (req, res) => {
 });
 
 // Get classes by module name
-router.get("/searchByModule", async (req, res) => {
+router.get("/SearchByModule", async (req, res) => {
   const { moduleName } = req.query; // Get the module name from the query string
 
   if (!moduleName) {
