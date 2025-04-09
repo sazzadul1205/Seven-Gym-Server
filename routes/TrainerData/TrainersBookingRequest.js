@@ -89,6 +89,30 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Update a Trainer Booking Request by _id
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const updateFields = req.body;
+
+  try {
+    const result = await Trainers_Booking_RequestCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .send({ message: "Booking not found or nothing changed." });
+    }
+
+    res.send({ message: "Booking updated successfully.", result });
+  } catch (error) {
+    console.error("Error updating booking:", error);
+    res.status(500).send({ message: "Failed to update booking." });
+  }
+});
+
 // DELETE Trainer by ID
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;

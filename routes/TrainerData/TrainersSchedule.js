@@ -217,6 +217,7 @@ router.get("/ByID", async (req, res) => {
   }
 });
 
+
 // Update Trainer's Schedule Endpoint
 router.put("/Update", async (req, res) => {
   // Extract the trainer's name and updated schedule from the request body
@@ -248,4 +249,80 @@ router.put("/Update", async (req, res) => {
   }
 });
 
+// Check class Valid or Available
+router.post("/SessionValidation", async (req, res) => {
+  try {
+    const booking = req.body;
+    // Validate input: Check if booking object, trainer and sessions exist.
+    if (
+      !booking ||
+      !booking.trainer ||
+      !booking.sessions ||
+      !Array.isArray(booking.sessions)
+    ) {
+      return res.status(400).send({ message: "Invalid booking data." });
+    }
+
+    // Find the trainer's schedule using the trainer's name.
+    const trainerScheduleDoc = await Trainers_ScheduleCollection.findOne({
+      trainerName: booking.trainer,
+    });
+    if (!trainerScheduleDoc) {
+      return res.status(404).send({ message: "Trainer schedule not found." });
+    }
+
+    // Run our validation function against the schedule data.
+    const validationResult = checkBookingValidity(
+      booking,
+      trainerScheduleDoc.trainerSchedule
+    );
+    res.send(validationResult);
+  } catch (error) {
+    console.error("Error validating booking:", error);
+    res.status(500).send({ message: "Something went wrong." });
+  }
+});
+
 module.exports = router;
+
+function checkBookingValidity(booking, trainerSchedule) {
+  // Loop through each session in the booking.
+  for (let sessionId of booking.sessions) {
+    let found = false;
+    let sessionFull = false;
+    // Iterate through each day in the trainer's schedule.
+    for (let day in trainerSchedule) {
+      for (let time in trainerSchedule[day]) {
+        let session = trainerSchedule[day][time];
+        if (session.id === sessionId) {
+          found = true;
+          // Count the number of participants (assumes 'participant' is an object with keys)
+          const participantCount = session.participant
+            ? Object.keys(session.participant).length
+            : 0;
+          if (participantCount >= session.participantLimit) {
+            sessionFull = true;
+          }
+          break; // Stop iterating time slots once session is found.
+        }
+      }
+      if (found) break; // Found session on this day; no need to check further days.
+    }
+    // If session wasn't found in schedule, return invalid with reason.
+    if (!found) {
+      return {
+        valid: false,
+        reason: `wrong class selected for session id: ${sessionId}`,
+      };
+    }
+    // If the session was found but is full, return invalid.
+    if (sessionFull) {
+      return {
+        valid: false,
+        reason: `class full for session id: ${sessionId}`,
+      };
+    }
+  }
+  // All sessions passed validation.
+  return { valid: true };
+}
