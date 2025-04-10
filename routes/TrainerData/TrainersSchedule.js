@@ -282,6 +282,49 @@ router.post("/SessionValidation", async (req, res) => {
   }
 });
 
+// Update participant list by trainerName and class IDs
+router.put("/AddParticipant", async (req, res) => {
+  const { trainerName, ids, payload } = req.body;
+
+  if (!trainerName || !Array.isArray(ids) || !payload) {
+    return res.status(400).send("trainerName, ids, and payload are required.");
+  }
+
+  try {
+    const trainer = await Trainers_ScheduleCollection.findOne({ trainerName });
+
+    if (!trainer) {
+      return res.status(404).send("Trainer not found.");
+    }
+
+    const updatedSchedule = { ...trainer.trainerSchedule };
+
+    for (const day in updatedSchedule) {
+      for (const time in updatedSchedule[day]) {
+        const session = updatedSchedule[day][time];
+        if (ids.includes(session.id)) {
+          // Ensure participant is an array
+          if (!Array.isArray(session.participant)) {
+            session.participant = [];
+          }
+          session.participant.push(payload);
+        }
+      }
+    }
+
+    // Save updated schedule
+    await Trainers_ScheduleCollection.updateOne(
+      { trainerName },
+      { $set: { trainerSchedule: updatedSchedule } }
+    );
+
+    res.send("Participants added successfully.");
+  } catch (error) {
+    console.error("Error updating participants:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;
 
 function checkBookingValidity(booking, trainerSchedule) {
