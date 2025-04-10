@@ -22,18 +22,13 @@ router.get("/", async (req, res) => {
 // Get Trainers Booking Request by bookerEmail
 router.get("/Booker/:bookerEmail", async (req, res) => {
   try {
-    const { bookerEmail } = req.params; // Get bookerEmail from the route parameter
+    const { bookerEmail } = req.params;
 
-    // Query the database for bookings with the specific bookerEmail
     const result = await Trainers_Booking_RequestCollection.find({
       bookerEmail,
     }).toArray();
 
-    // If no bookings are found
-    if (result.length === 0) {
-      return res.status(404).send("No bookings found for this booker.");
-    }
-
+    // Always return an array, even if it's empty
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainers_Booking_Request:", error);

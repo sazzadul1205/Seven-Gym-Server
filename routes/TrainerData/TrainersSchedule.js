@@ -325,6 +325,70 @@ router.put("/AddParticipant", async (req, res) => {
   }
 });
 
+// Remove participant by trainerName, class IDs, and bookerEmail
+router.put("/RemoveParticipant", async (req, res) => {
+  const { trainerName, ids, bookerEmail } = req.body;
+
+  // Validate inputs
+  if (!trainerName || !Array.isArray(ids) || !bookerEmail) {
+    return res
+      .status(400)
+      .send("trainerName, ids, and bookerEmail are required.");
+  }
+
+  try {
+    // Find the trainer schedule by trainerName
+    const trainer = await Trainers_ScheduleCollection.findOne({ trainerName });
+
+    if (!trainer) {
+      return res.status(404).send("Trainer not found.");
+    }
+
+    const updatedSchedule = { ...trainer.trainerSchedule };
+
+    let participantRemoved = false;
+
+    // Iterate through each day in the trainer's schedule
+    for (const day in updatedSchedule) {
+      for (const time in updatedSchedule[day]) {
+        const session = updatedSchedule[day][time];
+
+        // Check if the session's ID matches any of the provided IDs
+        if (ids.includes(session.id)) {
+          // Check if the session has participants (assume they are stored as an array)
+          if (Array.isArray(session.participant)) {
+            // Find the participant to remove based on bookerEmail
+            const participantIndex = session.participant.findIndex(
+              (participant) => participant.bookerEmail === bookerEmail
+            );
+
+            if (participantIndex !== -1) {
+              // Remove the participant from the session
+              session.participant.splice(participantIndex, 1); // Remove the participant
+              participantRemoved = true;
+            }
+          }
+        }
+      }
+    }
+
+    if (!participantRemoved) {
+      return res.status(404).send("Participant not found.");
+    }
+
+    // Save the updated schedule after removing the participant
+    await Trainers_ScheduleCollection.updateOne(
+      { trainerName },
+      { $set: { trainerSchedule: updatedSchedule } }
+    );
+
+    res.send("Participant removed successfully.");
+  } catch (error) {
+    console.error("Error removing participant:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;
 
 function checkBookingValidity(booking, trainerSchedule) {
