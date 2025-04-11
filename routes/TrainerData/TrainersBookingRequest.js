@@ -19,6 +19,26 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get a specific Trainers_Booking_Request by ID
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await Trainers_Booking_RequestCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!result) {
+      return res.status(404).send("Booking request not found.");
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching booking request by ID:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Get Trainers Booking Request by bookerEmail
 router.get("/Booker/:bookerEmail", async (req, res) => {
   try {
