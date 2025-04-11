@@ -122,14 +122,20 @@ router.delete("/:id", async (req, res) => {
     });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Booking not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    res.status(200).json({ message: "Booking deleted successfully" });
-  } catch (error) {
     res
-      .status(500)
-      .json({ message: "Error deleting booking", error: error.message });
+      .status(200)
+      .json({ success: true, message: "Booking deleted successfully" });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting booking",
+      error: error.message,
+    });
   }
 });
 
