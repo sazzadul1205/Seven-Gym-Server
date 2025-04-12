@@ -10,7 +10,13 @@ const Trainer_Booking_AcceptedCollection = client
 // Get Trainer_Booking_Accepted
 router.get("/", async (req, res) => {
   try {
-    const result = await Trainer_Booking_AcceptedCollection.find().toArray();
+    const { email } = req.query;
+
+    const query = email ? { bookerEmail: email } : {};
+
+    const result = await Trainer_Booking_AcceptedCollection.find(
+      query
+    ).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainer_Booking_Accepted:", error);
@@ -18,7 +24,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST Trainer_Booking_Accepted
 // POST Trainer_Booking_Accepted
 router.post("/", async (req, res) => {
   try {
