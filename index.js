@@ -26,8 +26,9 @@ const ClassBookingRequest = require("./routes/ClassBookingRequest");
 // Trainer Data
 const Trainers = require("./routes/TrainerData/Trainers");
 const TrainersSchedule = require("./routes/TrainerData/TrainersSchedule");
-const TrainersBookingRequest = require("./routes/TrainerData/TrainersBookingRequest");
 const TrainerBookingHistory = require("./routes/TrainerData/TrainerBookingHistory");
+const TrainersBookingRequest = require("./routes/TrainerData/TrainersBookingRequest");
+const TrainerBookingAccepted = require("./routes/TrainerData/TrainerBookingAccepted");
 
 // User Schedule
 const UserSchedule = require("./routes/UserSchedule/UserSchedule");
@@ -35,6 +36,8 @@ const UserSchedule = require("./routes/UserSchedule/UserSchedule");
 // Payment Data
 const TierUpgradeRefund = require("./routes/Payment/TierUpgradeRefund");
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
+const TrainerSessionPayment = require("./routes/Payment/TrainerSessionPayment");
+const TrainerSessionRefund = require("./routes/Payment/TrainerSessionRefund");
 
 // Payment Intent
 const StripeRefundIntent = require("./routes/Payment/StripeRefundIntent");
@@ -85,8 +88,9 @@ app.use("/Class_Booking_Request", ClassBookingRequest);
 // Trainer Data
 app.use("/Trainers", Trainers);
 app.use("/Trainers_Schedule", TrainersSchedule);
-app.use("/Trainers_Booking_Request", TrainersBookingRequest);
 app.use("/Trainer_Booking_History", TrainerBookingHistory);
+app.use("/Trainers_Booking_Request", TrainersBookingRequest);
+app.use("/Trainer_Booking_Accepted", TrainerBookingAccepted);
 
 // User Schedule
 app.use("/User_Schedule", UserSchedule);
@@ -94,6 +98,8 @@ app.use("/User_Schedule", UserSchedule);
 // Payment Data
 app.use("/Tier_Upgrade_Refund", TierUpgradeRefund);
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
+app.use("/Trainer_Session_Payment", TrainerSessionPayment);
+app.use("/Trainer_Session_Refund", TrainerSessionRefund);
 
 // Payment Intent
 app.use("/Stripe_Refund_Intent", StripeRefundIntent);
