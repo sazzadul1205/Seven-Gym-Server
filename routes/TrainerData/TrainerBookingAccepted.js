@@ -19,19 +19,25 @@ router.get("/", async (req, res) => {
 });
 
 // POST Trainer_Booking_Accepted
+// POST Trainer_Booking_Accepted
 router.post("/", async (req, res) => {
   try {
-    const paymentData = req.body;
+    const paymentData = { ...req.body };
+    delete paymentData._id; // Important: let Mongo generate a new _id
 
-    // Insert data directly into the collection
     const result = await Trainer_Booking_AcceptedCollection.insertOne(
       paymentData
     );
 
-    res.status(201).send({
-      message: "Booking record added successfully.",
-      paymentId: result.insertedId,
-    });
+    if (result.insertedId) {
+      const insertedDoc = await Trainer_Booking_AcceptedCollection.findOne({
+        _id: result.insertedId,
+      });
+
+      return res.status(201).send(insertedDoc);
+    }
+
+    res.status(500).send({ message: "Insertion failed." });
   } catch (error) {
     console.error("Error adding Trainer_Booking_Accepted:", error);
     res.status(500).send("Something went wrong.");
