@@ -81,6 +81,35 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/TrainerIdByName", async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name) {
+      return res
+        .status(400)
+        .json({ error: "Name query parameter is required" });
+    }
+
+    // Find trainer by name
+    const trainer = await TrainersCollection.findOne({
+      name: { $regex: new RegExp(name, "i") },
+    });
+
+    if (!trainer) {
+      return res.status(404).json({ error: "Trainer not found" });
+    }
+
+    // Return the trainer's ID
+    res.json({ id: trainer._id });
+  } catch (error) {
+    console.error("Error fetching trainer by name:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while fetching trainer ID." });
+  }
+});
+
 // Get Only Trainers Names and IDs
 router.get("/names-and-ids", async (req, res) => {
   try {

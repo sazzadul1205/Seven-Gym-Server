@@ -128,6 +128,28 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// Update a specific Trainers_Booking_Request by ID
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  try {
+    const result = await Trainers_Booking_RequestCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateData }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).send("No booking request was updated.");
+    }
+
+    res.send({ message: "Booking request updated successfully." });
+  } catch (error) {
+    console.error("Error updating booking request:", error);
+    res.status(500).send("Something went wrong during the update.");
+  }
+});
+
 // DELETE Trainer by ID
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
