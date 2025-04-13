@@ -24,6 +24,63 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get a specific Trainers_Booking_Request by ID
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await Trainer_Booking_AcceptedCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!result) {
+      return res.status(404).send("Booking request not found.");
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching booking request by ID:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Get Trainers Booking Request by bookerEmail
+router.get("/Booker/:bookerEmail", async (req, res) => {
+  try {
+    const { bookerEmail } = req.params;
+
+    const result = await Trainer_Booking_AcceptedCollection.find({
+      bookerEmail,
+    }).toArray();
+
+    // Always return an array, even if it's empty
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching Trainers_Booking_Request:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// GET all booking requests for a specific trainer (using route param)
+router.get("/Trainer/:trainerName", async (req, res) => {
+  const { trainerName } = req.params;
+
+  if (!trainerName) {
+    return res.status(400).send("Trainer name is required.");
+  }
+
+  try {
+    const result = await Trainer_Booking_AcceptedCollection.find({
+      trainer: trainerName,
+    }).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching trainer bookings:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 // POST Trainer_Booking_Accepted
 router.post("/", async (req, res) => {
   try {
