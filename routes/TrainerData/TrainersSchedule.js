@@ -432,60 +432,123 @@ router.put("/ResetParticipants", async (req, res) => {
   }
 });
 
-router.patch("/AcceptParticipant", async (req, res) => {
-  const { sessionIds = [], acceptedAt, acceptedId } = req.body;
+// PATCH route to accept bookings for specific sessions
+router.patch("/AcceptBooking", async (req, res) => {
+  // Destructure required properties from the request body.
+  const {
+    sessionIds = [],
+    acceptedAt,
+    stripePaymentID,
+    bookerEmail,
+  } = req.body;
 
-  if (!sessionIds.length || !acceptedAt || !acceptedId) {
+  // Validate input: ensure none of the required values are missing.
+  if (!sessionIds.length || !acceptedAt || !stripePaymentID || !bookerEmail) {
     return res.status(400).send("Missing required data.");
   }
 
   try {
+    // Retrieve all trainer schedules from the database.
     const trainers = await Trainers_ScheduleCollection.find().toArray();
 
+    // bulkOps will store all update operations for bulk writing.
     const bulkOps = [];
+    // skippedSessions will keep track of session IDs that were skipped, along with a message.
+    const skippedSessions = [];
 
+    // Loop over each trainer document.
     for (const trainer of trainers) {
       const { _id, trainerSchedule } = trainer;
 
+      // Flag to check if any update occurred on this trainer's schedule.
+      let modified = false;
+
+      // Loop over each day in the trainer's schedule.
       for (const day in trainerSchedule) {
+        // Loop over each time slot within the day.
         for (const time in trainerSchedule[day]) {
           const session = trainerSchedule[day][time];
 
-          if (sessionIds.includes(session.id)) {
-            // Normalize participant to array if needed
-            const participants = Array.isArray(session.participant)
-              ? session.participant
-              : session.participant && Object.keys(session.participant).length
-              ? [session.participant]
-              : [];
+          // If the session's ID is not in the array of sessionIds to update, skip it.
+          if (!sessionIds.includes(session.id)) continue;
 
-            const updatedParticipants = participants.map((p) => ({
-              ...p,
-              bookingReqID: acceptedId,
-              acceptedAt,
-              paid: true,
-            }));
-
-            trainerSchedule[day][time].participant = updatedParticipants;
-
-            bulkOps.push({
-              updateOne: {
-                filter: { _id },
-                update: { $set: { trainerSchedule } },
-              },
-            });
+          // Normalize the participant data into an array.
+          let participants = [];
+          if (Array.isArray(session.participant)) {
+            participants = session.participant;
+          } else if (
+            typeof session.participant === "object" &&
+            Object.keys(session.participant).length
+          ) {
+            participants = [session.participant];
           }
+
+          // If there are no participants in this session, record the skip and continue.
+          if (!participants.length) {
+            skippedSessions.push(`${session.id} (no participants)`);
+            continue;
+          }
+
+          // Map through the participants and update the matching participant (by bookerEmail).
+          const updatedParticipants = participants.map((p) => {
+            if (p.bookerEmail === bookerEmail) {
+              return {
+                ...p,
+                stripePaymentID, // acceptedReqId, Add To link
+                acceptedAt, // Set new accepted time.
+                paid: true, // Mark as paid.
+              };
+            }
+            return p; // Leave other participants unchanged.
+          });
+
+          // Check if any participant was updated (i.e., matching email found and updated).
+          const wasUpdated = updatedParticipants.some(
+            (p) => p.bookerEmail === bookerEmail && p.paid === true
+          );
+
+          if (!wasUpdated) {
+            // Record if no matching email was found.
+            skippedSessions.push(`${session.id} (no matching email)`);
+            continue;
+          }
+
+          // Set the updated participants in the session.
+          trainerSchedule[day][time].participant = updatedParticipants;
+          modified = true;
         }
+      }
+
+      // If this trainer document was modified, add an update operation to bulkOps.
+      if (modified) {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id },
+            update: { $set: { trainerSchedule } },
+          },
+        });
       }
     }
 
+    // If no update operations were added, nothing was updated.
     if (!bulkOps.length) {
-      return res.status(404).send("No matching session IDs found.");
+      return res.status(404).send({
+        success: false,
+        message: "No sessions were updated.",
+        skipped: skippedSessions,
+      });
     }
 
+    // Execute bulk update operations on the Trainers_Schedule collection.
     const result = await Trainers_ScheduleCollection.bulkWrite(bulkOps);
 
-    res.send({ success: true, message: "Sessions updated", result });
+    // Return the result along with any sessions that were skipped.
+    res.send({
+      success: true,
+      message: "Sessions updated successfully.",
+      modifiedCount: result.modifiedCount,
+      skipped: skippedSessions,
+    });
   } catch (error) {
     console.error("Update error:", error);
     res.status(500).send("Something went wrong.");
