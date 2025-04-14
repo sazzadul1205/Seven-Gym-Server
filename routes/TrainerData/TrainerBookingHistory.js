@@ -53,4 +53,20 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    // Deleting all booking history
+    const result = await Trainer_Booking_HistoryCollection.deleteMany({});
+
+    if (result.deletedCount > 0) {
+      res.send({ message: "All booking history has been deleted." });
+    } else {
+      res.status(404).send("No booking history found.");
+    }
+  } catch (error) {
+    console.error("Error deleting booking history:", error);
+    res.status(500).send("Failed to delete booking history.");
+  }
+});
+
 module.exports = router;

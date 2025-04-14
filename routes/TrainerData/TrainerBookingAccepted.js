@@ -106,4 +106,20 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Delete All Trainer_Booking_Accepted
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_AcceptedCollection.deleteMany({});
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send("No bookings found to delete.");
+    }
+
+    res.status(200).send(`${result.deletedCount} booking(s) deleted.`);
+  } catch (error) {
+    console.error("Error deleting Trainer_Booking_Accepted:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;

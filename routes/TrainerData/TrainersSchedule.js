@@ -389,6 +389,45 @@ router.put("/RemoveParticipant", async (req, res) => {
   }
 });
 
+// Reset all participants in Trainers_Schedule
+router.put("/ResetParticipants", async (req, res) => {
+  try {
+    const trainers = await Trainers_ScheduleCollection.find().toArray();
+
+    const updatedTrainers = trainers.map((trainer) => {
+      const schedule = trainer.trainerSchedule;
+
+      for (const day in schedule) {
+        for (const time in schedule[day]) {
+          if (schedule[day][time]?.participant) {
+            schedule[day][time].participant = {}; // or [] if that's your format
+          }
+        }
+      }
+
+      return {
+        ...trainer,
+        trainerSchedule: schedule,
+      };
+    });
+
+    // Update each document
+    const updatePromises = updatedTrainers.map((trainer) =>
+      Trainers_ScheduleCollection.updateOne(
+        { _id: trainer._id },
+        { $set: { trainerSchedule: trainer.trainerSchedule } }
+      )
+    );
+
+    await Promise.all(updatePromises);
+
+    res.send({ message: "All participants reset successfully." });
+  } catch (error) {
+    console.error("Error resetting participants:", error);
+    res.status(500).send("Failed to reset participants.");
+  }
+});
+
 module.exports = router;
 
 function checkBookingValidity(booking, trainerSchedule) {

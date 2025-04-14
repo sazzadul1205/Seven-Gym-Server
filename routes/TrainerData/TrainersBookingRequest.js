@@ -150,17 +150,17 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE Trainer by ID
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
+// DELETE Trainer by ID (ID sent in request body)
+router.delete("/", async (req, res) => {
+  const { id } = req.body; // Get the ID from the body
 
-  if (!ObjectId.isValid(id)) {
+  if (!id || !ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid booking ID format" });
   }
 
   try {
     const result = await Trainers_Booking_RequestCollection.deleteOne({
-      _id: new ObjectId(id),
+      _id: new ObjectId(id), // Convert the string ID to an ObjectId for MongoDB
     });
 
     if (result.deletedCount === 0) {
@@ -178,6 +178,22 @@ router.delete("/:id", async (req, res) => {
       message: "Error deleting booking",
       error: error.message,
     });
+  }
+});
+
+// Delete all trainer booking requests
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Trainers_Booking_RequestCollection.deleteMany({});
+
+    if (result.deletedCount > 0) {
+      res.send({ message: "All booking requests have been deleted." });
+    } else {
+      res.status(404).send("No booking requests found.");
+    }
+  } catch (error) {
+    console.error("Error deleting booking requests:", error);
+    res.status(500).send("Failed to delete booking requests.");
   }
 });
 
