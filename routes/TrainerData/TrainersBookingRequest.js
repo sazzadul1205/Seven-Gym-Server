@@ -150,17 +150,17 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE Trainer by ID (ID sent in request body)
+// DELETE Trainer by ID (ID sent in query param)
 router.delete("/", async (req, res) => {
-  const { id } = req.body; // Get the ID from the body
+  const { id } = req.query;
 
-  if (!id || !ObjectId.isValid(id)) {
+  if (!id || !ObjectId.isValid(String(id))) {
     return res.status(400).json({ message: "Invalid booking ID format" });
   }
 
   try {
     const result = await Trainers_Booking_RequestCollection.deleteOne({
-      _id: new ObjectId(id), // Convert the string ID to an ObjectId for MongoDB
+      _id: new ObjectId(String(id)), // explicitly cast to string
     });
 
     if (result.deletedCount === 0) {

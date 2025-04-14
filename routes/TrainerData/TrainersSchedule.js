@@ -7,10 +7,14 @@ const Trainers_ScheduleCollection = client
   .db("Seven-Gym")
   .collection("Trainers_Schedule");
 
-// Get Trainers_Schedule
+// Get Trainers_Schedule - filter by trainerName if provided
 router.get("/", async (req, res) => {
   try {
-    const result = await Trainers_ScheduleCollection.find().toArray();
+    const { trainerName } = req.query;
+
+    const filter = trainerName ? { trainerName } : {}; // empty = fetch all
+
+    const result = await Trainers_ScheduleCollection.find(filter).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainers_Schedule:", error);
@@ -425,6 +429,66 @@ router.put("/ResetParticipants", async (req, res) => {
   } catch (error) {
     console.error("Error resetting participants:", error);
     res.status(500).send("Failed to reset participants.");
+  }
+});
+
+router.patch("/AcceptParticipant", async (req, res) => {
+  const { sessionIds = [], acceptedAt, acceptedId } = req.body;
+
+  if (!sessionIds.length || !acceptedAt || !acceptedId) {
+    return res.status(400).send("Missing required data.");
+  }
+
+  try {
+    const trainers = await Trainers_ScheduleCollection.find().toArray();
+
+    const bulkOps = [];
+
+    for (const trainer of trainers) {
+      const { _id, trainerSchedule } = trainer;
+
+      for (const day in trainerSchedule) {
+        for (const time in trainerSchedule[day]) {
+          const session = trainerSchedule[day][time];
+
+          if (sessionIds.includes(session.id)) {
+            // Normalize participant to array if needed
+            const participants = Array.isArray(session.participant)
+              ? session.participant
+              : session.participant && Object.keys(session.participant).length
+              ? [session.participant]
+              : [];
+
+            const updatedParticipants = participants.map((p) => ({
+              ...p,
+              bookingReqID: acceptedId,
+              acceptedAt,
+              paid: true,
+            }));
+
+            trainerSchedule[day][time].participant = updatedParticipants;
+
+            bulkOps.push({
+              updateOne: {
+                filter: { _id },
+                update: { $set: { trainerSchedule } },
+              },
+            });
+          }
+        }
+      }
+    }
+
+    if (!bulkOps.length) {
+      return res.status(404).send("No matching session IDs found.");
+    }
+
+    const result = await Trainers_ScheduleCollection.bulkWrite(bulkOps);
+
+    res.send({ success: true, message: "Sessions updated", result });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).send("Something went wrong.");
   }
 });
 
