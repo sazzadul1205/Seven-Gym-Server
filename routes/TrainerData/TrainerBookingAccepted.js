@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Trainer_Booking_Accepted
 const Trainer_Booking_AcceptedCollection = client
@@ -10,9 +11,21 @@ const Trainer_Booking_AcceptedCollection = client
 // Get Trainer_Booking_Accepted
 router.get("/", async (req, res) => {
   try {
-    const { email } = req.query;
+    const { email, id } = req.query;
 
-    const query = email ? { bookerEmail: email } : {};
+    const query = {};
+
+    if (email) {
+      query.bookerEmail = email;
+    }
+
+    if (id) {
+      try {
+        query._id = new ObjectId(id);
+      } catch (err) {
+        return res.status(400).send("Invalid _id format.");
+      }
+    }
 
     const result = await Trainer_Booking_AcceptedCollection.find(
       query
@@ -25,7 +38,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get a specific Trainers_Booking_Request by ID
-router.get("/:id", async (req, res) => {
+router.get("/", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -102,6 +115,34 @@ router.post("/", async (req, res) => {
     res.status(500).send({ message: "Insertion failed." });
   } catch (error) {
     console.error("Error adding Trainer_Booking_Accepted:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Update Trainer_Booking_Accepted by ID
+router.put("/Update/:id", async (req, res) => {
+  const { id } = req.params;
+
+  let updatedData = { ...req.body };
+  delete updatedData._id; // Don't allow _id update
+
+  try {
+    const result = await Trainer_Booking_AcceptedCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).send("Booking not found.");
+    }
+
+    const updatedDoc = await Trainer_Booking_AcceptedCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    res.send(updatedDoc);
+  } catch (error) {
+    console.error("Error updating Trainer_Booking_Accepted:", error);
     res.status(500).send("Something went wrong.");
   }
 });

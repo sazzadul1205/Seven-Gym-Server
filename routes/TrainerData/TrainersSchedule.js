@@ -286,6 +286,69 @@ router.post("/SessionValidation", async (req, res) => {
   }
 });
 
+router.post("/UpdateParticipant", async (req, res) => {
+  try {
+    const { stripePaymentID, startAt } = req.body;
+
+    if (!stripePaymentID || !startAt) {
+      return res.status(400).send("stripePaymentID and startAt are required.");
+    }
+
+    const schedules = await Trainers_ScheduleCollection.find().toArray();
+    let totalUpdated = 0;
+
+    for (const schedule of schedules) {
+      const { trainerSchedule } = schedule;
+      let modified = false;
+
+      for (const day in trainerSchedule) {
+        for (const time in trainerSchedule[day]) {
+          const session = trainerSchedule[day][time];
+
+          if (Array.isArray(session.participant)) {
+            let updatedInSession = false;
+
+            session.participant.forEach((participant) => {
+              if (participant.stripePaymentID === stripePaymentID) {
+                participant.startAt = startAt;
+                updatedInSession = true;
+              }
+            });
+
+            if (updatedInSession) {
+              modified = true;
+              await Trainers_ScheduleCollection.updateOne(
+                { _id: schedule._id },
+                {
+                  $set: {
+                    [`trainerSchedule.${day}.${time}.participant`]:
+                      session.participant,
+                  },
+                }
+              );
+              totalUpdated++;
+            }
+          }
+        }
+      }
+    }
+
+    if (totalUpdated > 0) {
+      return res.send({
+        success: true,
+        message: `Updated ${totalUpdated} session(s) with startAt.`,
+      });
+    } else {
+      return res
+        .status(404)
+        .send("No participant found with that stripePaymentID.");
+    }
+  } catch (error) {
+    console.error("Error updating startAt:", error);
+    res.status(500).send("Internal Server Error.");
+  }
+});
+
 // Update participant list by trainerName and class IDs
 router.put("/AddParticipant", async (req, res) => {
   const { trainerName, ids, payload } = req.body;
