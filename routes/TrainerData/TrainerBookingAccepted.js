@@ -37,26 +37,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a specific Trainers_Booking_Request by ID
-router.get("/", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await Trainer_Booking_AcceptedCollection.findOne({
-      _id: new ObjectId(id),
-    });
-
-    if (!result) {
-      return res.status(404).send("Booking request not found.");
-    }
-
-    res.send(result);
-  } catch (error) {
-    console.error("Error fetching booking request by ID:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
 // Get Trainers Booking Request by bookerEmail
 router.get("/Booker/:bookerEmail", async (req, res) => {
   try {
@@ -143,6 +123,26 @@ router.put("/Update/:id", async (req, res) => {
     res.send(updatedDoc);
   } catch (error) {
     console.error("Error updating Trainer_Booking_Accepted:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Delete Trainer_Booking_Accepted by ID
+router.delete("/Delete/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await Trainer_Booking_AcceptedCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send("Booking not found or already deleted.");
+    }
+
+    res.status(200).send(`Booking with ID ${id} deleted successfully.`);
+  } catch (error) {
+    console.error("Error deleting Trainer_Booking_Accepted by ID:", error);
     res.status(500).send("Something went wrong.");
   }
 });

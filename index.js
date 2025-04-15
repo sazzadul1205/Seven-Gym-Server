@@ -47,6 +47,8 @@ const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
 const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
 const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
+const CleanupTrainerSessions = require("./routes/Automatic/cleanupTrainerSessions");
+const CleanupExpiredTrainerBookings = require("./routes/Automatic/cleanupExpiredTrainerBookings");
 
 require("dotenv").config();
 const app = express();
@@ -109,6 +111,8 @@ app.use("/Stripe_Payment_Intent", StripePaymentIntent);
 app.use("/CheckExpiredTiers", CheckExpiredTiers);
 app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
 app.use("/BookingSessionExpire", BookingSessionExpire);
+app.use("/CleanupTrainerSessions", CleanupTrainerSessions);
+app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 
 // Set up the basic route
 app.get("/", (req, res) => {
