@@ -3,9 +3,9 @@ const router = express.Router();
 const cron = require("node-cron");
 const { client } = require("../../config/db");
 
-const Trainers_Booking_RequestCollection = client
+const Trainer_Booking_RequestCollection = client
   .db("Seven-Gym")
-  .collection("Trainers_Booking_Request");
+  .collection("Trainer_Booking_Request");
 
 console.log("🔁 Booking Status Cron Job Initialized");
 
@@ -21,7 +21,7 @@ const checkExpiredPendingBookings = async () => {
   try {
     const now = new Date();
 
-    const pendingBookings = await Trainers_Booking_RequestCollection.find({
+    const pendingBookings = await Trainer_Booking_RequestCollection.find({
       status: "Pending",
     }).toArray();
 
@@ -51,7 +51,7 @@ const checkExpiredPendingBookings = async () => {
 
       const expiredIds = expiredBookings.map((booking) => booking._id);
 
-      await Trainers_Booking_RequestCollection.updateMany(
+      await Trainer_Booking_RequestCollection.updateMany(
         { _id: { $in: expiredIds } },
         {
           $set: {
