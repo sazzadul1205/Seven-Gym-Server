@@ -4,14 +4,14 @@ const { client } = require("../../config/db");
 const { ObjectId } = require("mongodb");
 
 // Collection for Trainers_Booking_Request
-const Trainers_Booking_RequestCollection = client
+const Trainer_Booking_RequestCollection = client
   .db("Seven-Gym")
-  .collection("Trainers_Booking_Request");
+  .collection("Trainer_Booking_Request");
 
 // Get Trainers_Booking_Request
 router.get("/", async (req, res) => {
   try {
-    const result = await Trainers_Booking_RequestCollection.find().toArray();
+    const result = await Trainer_Booking_RequestCollection.find().toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainers_Booking_Request:", error);
@@ -24,7 +24,7 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await Trainers_Booking_RequestCollection.findOne({
+    const result = await Trainer_Booking_RequestCollection.findOne({
       _id: new ObjectId(id),
     });
 
@@ -44,7 +44,7 @@ router.get("/Booker/:bookerEmail", async (req, res) => {
   try {
     const { bookerEmail } = req.params;
 
-    const result = await Trainers_Booking_RequestCollection.find({
+    const result = await Trainer_Booking_RequestCollection.find({
       bookerEmail,
     }).toArray();
 
@@ -65,7 +65,7 @@ router.get("/Trainer/:trainerName", async (req, res) => {
   }
 
   try {
-    const result = await Trainers_Booking_RequestCollection.find({
+    const result = await Trainer_Booking_RequestCollection.find({
       trainer: trainerName,
     }).toArray();
 
@@ -85,7 +85,7 @@ router.post("/", async (req, res) => {
       return res.status(400).send("Invalid request data.");
     }
 
-    const result = await Trainers_Booking_RequestCollection.insertOne(
+    const result = await Trainer_Booking_RequestCollection.insertOne(
       newRequest
     );
 
@@ -110,7 +110,7 @@ router.patch("/:id", async (req, res) => {
   const updateFields = req.body;
 
   try {
-    const result = await Trainers_Booking_RequestCollection.updateOne(
+    const result = await Trainer_Booking_RequestCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateFields }
     );
@@ -134,7 +134,7 @@ router.put("/:id", async (req, res) => {
   const updateData = req.body;
 
   try {
-    const result = await Trainers_Booking_RequestCollection.updateOne(
+    const result = await Trainer_Booking_RequestCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }
     );
@@ -159,7 +159,7 @@ router.delete("/", async (req, res) => {
   }
 
   try {
-    const result = await Trainers_Booking_RequestCollection.deleteOne({
+    const result = await Trainer_Booking_RequestCollection.deleteOne({
       _id: new ObjectId(String(id)), // explicitly cast to string
     });
 
@@ -184,7 +184,7 @@ router.delete("/", async (req, res) => {
 // Delete all trainer booking requests
 router.delete("/DeleteAll", async (req, res) => {
   try {
-    const result = await Trainers_Booking_RequestCollection.deleteMany({});
+    const result = await Trainer_Booking_RequestCollection.deleteMany({});
 
     if (result.deletedCount > 0) {
       res.send({ message: "All booking requests have been deleted." });

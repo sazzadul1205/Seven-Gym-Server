@@ -221,6 +221,45 @@ router.get("/ByID", async (req, res) => {
   }
 });
 
+// GET route to fetch Basic session Info by IDs via query
+router.get("/BasicInfoByID", async (req, res) => {
+  try {
+    const ids = req.query.ids;
+
+    // Ensure it's an array
+    const idArray = Array.isArray(ids) ? ids : [ids];
+
+    // Fetch all schedules
+    const allSchedules = await Trainers_ScheduleCollection.find().toArray();
+
+    const matchedClasses = [];
+
+    for (const schedule of allSchedules) {
+      const { trainerSchedule } = schedule;
+
+      for (const day in trainerSchedule) {
+        const times = trainerSchedule[day];
+        for (const time in times) {
+          const classData = times[time];
+          if (idArray.includes(classData.id)) {
+            matchedClasses.push({
+              id: classData.id,
+              day: classData.day,
+              time: classData.time,
+              classPrice: classData.classPrice,
+            });
+          }
+        }
+      }
+    }
+
+    res.send(matchedClasses);
+  } catch (error) {
+    console.error("Error fetching schedule by ID:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 // Update Trainer's Schedule Endpoint
 router.put("/Update", async (req, res) => {
   // Extract the trainer's name and updated schedule from the request body
