@@ -25,6 +25,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get all booking history by trainerId
+router.get("/Trainer/:trainerId", async (req, res) => {
+  try {
+    const { trainerId } = req.params;
+
+    const query = {
+      $or: [
+        { trainerId }, // If stored as string
+        { trainerId: new ObjectId(trainerId) }, // If stored as ObjectId
+      ],
+    };
+
+    const result = await Trainer_Booking_HistoryCollection.find(
+      query
+    ).toArray();
+
+    if (result.length === 0) {
+      return res.status(404).send("No bookings found for this trainer.");
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching bookings by trainerId:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Post request to create a new booking request
 router.post("/", async (req, res) => {
   try {
