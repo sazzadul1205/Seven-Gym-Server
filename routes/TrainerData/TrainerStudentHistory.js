@@ -36,6 +36,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/ByBooker", async (req, res) => {
+  try {
+    const { bookerEmail } = req.query;
+
+    if (!bookerEmail) {
+      return res.status(400).send("Missing required parameter: bookerEmail");
+    }
+
+    const result = await Trainer_Student_HistoryCollection.find({
+      StudentsHistory: {
+        $elemMatch: { bookerEmail },
+      },
+    })
+      .project({ trainerId: 1, name: 1, _id: 0 })
+      .toArray();
+
+    if (!result || result.length === 0) {
+      return res.status(404).send("No trainers found for this student.");
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching trainers by student email:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Add or update StudentsHistory array by trainerId
 router.post("/", async (req, res) => {
   try {
