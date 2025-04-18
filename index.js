@@ -28,6 +28,7 @@ const Trainers = require("./routes/TrainerData/Trainers");
 const TrainersSchedule = require("./routes/TrainerData/TrainersSchedule");
 const TrainerBookingHistory = require("./routes/TrainerData/TrainerBookingHistory");
 const TrainerBookingRequest = require("./routes/TrainerData/TrainerBookingRequest");
+const TrainerStudentHistory = require("./routes/TrainerData/TrainerStudentHistory");
 const TrainerBookingAccepted = require("./routes/TrainerData/TrainerBookingAccepted");
 
 // User Schedule
@@ -92,6 +93,7 @@ app.use("/Trainers", Trainers);
 app.use("/Trainers_Schedule", TrainersSchedule);
 app.use("/Trainer_Booking_History", TrainerBookingHistory);
 app.use("/Trainer_Booking_Request", TrainerBookingRequest);
+app.use("/Trainer_Student_History", TrainerStudentHistory);
 app.use("/Trainer_Booking_Accepted", TrainerBookingAccepted);
 
 // User Schedule
@@ -100,8 +102,8 @@ app.use("/User_Schedule", UserSchedule);
 // Payment Data
 app.use("/Tier_Upgrade_Refund", TierUpgradeRefund);
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
-app.use("/Trainer_Session_Payment", TrainerSessionPayment);
 app.use("/Trainer_Session_Refund", TrainerSessionRefund);
+app.use("/Trainer_Session_Payment", TrainerSessionPayment);
 
 // Payment Intent
 app.use("/Stripe_Refund_Intent", StripeRefundIntent);

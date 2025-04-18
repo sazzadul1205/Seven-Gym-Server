@@ -110,6 +110,23 @@ router.get("/TrainerIdByName", async (req, res) => {
   }
 });
 
+// Get all trainers' names and IDs only
+router.get("/Name", async (req, res) => {
+  try {
+    const result = await TrainersCollection.find(
+      {}, // no filter
+      {
+        projection: { _id: 1, name: 1 }, // only fetch _id and trainerName
+      }
+    ).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching trainer names:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Get Only Trainers Names and IDs
 router.get("/names-and-ids", async (req, res) => {
   try {

@@ -13,49 +13,87 @@ router.get("/", async (req, res) => {
   try {
     const { trainerId } = req.query;
 
-    if (!trainerId) {
-      return res.status(400).send("trainerId is required.");
-    }
+    let result;
 
-    const result = await Trainer_Student_HistoryCollection.findOne({
-      trainerId: trainerId, // direct match on trainerId field
-    });
+    if (trainerId) {
+      // Fetch specific trainer history
+      result = await Trainer_Student_HistoryCollection.findOne({
+        trainerId: trainerId,
+      });
 
-    if (!result) {
-      return res.status(404).send("Trainer history not found.");
+      if (!result) {
+        return res.status(404).send("Trainer history not found.");
+      }
+    } else {
+      // Fetch all trainer histories
+      result = await Trainer_Student_HistoryCollection.find({}).toArray();
     }
 
     res.send(result);
   } catch (error) {
-    console.error(
-      "Error fetching Trainer_Student_History by trainerId:",
-      error
-    );
+    console.error("Error fetching Trainer_Student_History:", error);
     res.status(500).send("Something went wrong.");
   }
 });
 
-// Add to StudentsHistory array by trainerId
+// Add or update StudentsHistory array by trainerId
 router.post("/", async (req, res) => {
   try {
     const { trainerId, studentEntry } = req.body;
 
-    if (!trainerId || !studentEntry) {
-      return res.status(400).send("trainerId and studentEntry are required.");
+    if (!trainerId || !studentEntry || !studentEntry.bookerEmail) {
+      return res
+        .status(400)
+        .send("trainerId, studentEntry, and bookerEmail are required.");
     }
 
+    // Check if student with the given email already exists in the StudentsHistory array
     const result = await Trainer_Student_HistoryCollection.updateOne(
-      { trainerId: trainerId }, // match using string field
-      { $push: { StudentsHistory: studentEntry } }
+      {
+        trainerId: trainerId,
+        "StudentsHistory.bookerEmail": studentEntry.bookerEmail, // Check if email exists
+      },
+      {
+        $set: {
+          "StudentsHistory.$.ActiveTime": studentEntry.ActiveTime, // Update ActiveTime
+        },
+      }
     );
 
-    if (result.modifiedCount === 0) {
-      return res.status(404).send("Trainer not found or update failed.");
+    if (result.matchedCount === 0) {
+      // If no matching email was found, add the new entry
+      const addResult = await Trainer_Student_HistoryCollection.updateOne(
+        { trainerId: trainerId },
+        { $push: { StudentsHistory: studentEntry } }
+      );
+
+      if (addResult.modifiedCount === 0) {
+        return res
+          .status(400)
+          .send("Trainer found but student entry was not added.");
+      }
+
+      return res.send({ message: "Student history added successfully." });
     }
 
-    res.send({ message: "Student history added successfully." });
+    res.send({ message: "Student history updated successfully." });
   } catch (error) {
-    console.error("Error adding to StudentsHistory:", error);
+    console.error("Error adding or updating StudentsHistory:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Delete all trainer-student history records
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Trainer_Student_HistoryCollection.deleteMany({});
+
+    res.send({
+      message: "All trainer-student history records deleted.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting all trainer-student history records:", error);
     res.status(500).send("Something went wrong.");
   }
 });
