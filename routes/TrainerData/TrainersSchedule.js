@@ -22,6 +22,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get all trainers' names and IDs only
+router.get("/Name", async (req, res) => {
+  try {
+    const result = await Trainers_ScheduleCollection.find(
+      {}, // no filter
+      {
+        projection: { _id: 1, trainerName: 1 }, // only fetch _id and trainerName
+      }
+    ).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching trainer names:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Get the next session after a specific time on a specific day
 router.get("/SelectedSession", async (req, res, next) => {
   const { trainerId, trainerName, day, time } = req.query;
