@@ -554,4 +554,59 @@ router.put("/UpdateTrainerDetailsInfo/:id", async (req, res) => {
   }
 });
 
+// Add a testimonial to a Trainer by ID
+router.patch("/AddTestimonials/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { clientAvatar, clientName, testimonial, email, rating } = req.body;
+
+    // Validate the required fields
+    if (!clientAvatar || !clientName || !testimonial || !email || !rating) {
+      return res.status(400).json({
+        error:
+          "All fields (clientAvatar, clientName, testimonial, email, rating) are required.",
+      });
+    }
+
+    // Check if the rating is a valid number (1-5)
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5." });
+    }
+
+    // Fetch the trainer by ID
+    const trainer = await TrainersCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!trainer) {
+      return res.status(404).json({ error: "Trainer not found" });
+    }
+
+    // Construct the new testimonial object
+    const newTestimonial = {
+      clientAvatar,
+      clientName,
+      testimonial,
+      email,
+      rating,
+    };
+
+    // Update the trainer's testimonials array by adding the new testimonial
+    const result = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $push: { testimonials: newTestimonial } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(500).json({ error: "Failed to add the testimonial." });
+    }
+
+    // Send a success message
+    res.status(200).json({ message: "Testimonial added successfully!" });
+  } catch (error) {
+    console.error("Error adding testimonial:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while adding the testimonial." });
+  }
+});
+
 module.exports = router;
