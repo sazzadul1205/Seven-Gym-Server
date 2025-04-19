@@ -313,6 +313,43 @@ router.get("/TrainerInfo", async (req, res) => {
   }
 });
 
+router.get("/TestimonialsByEmail", async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ error: "Email query parameter is required." });
+    }
+
+    const trainers = await TrainersCollection.find({
+      testimonials: { $elemMatch: { email } },
+    }).toArray();
+
+    const testimonialsByEmail = [];
+
+    trainers.forEach((trainer) => {
+      trainer.testimonials
+        .filter((t) => t.email === email)
+        .forEach((t) => {
+          testimonialsByEmail.push({
+            trainerName: trainer.name,
+            trainerId: trainer._id,
+            ...t,
+          });
+        });
+    });
+
+    res.send(testimonialsByEmail);
+  } catch (error) {
+    console.error("Error fetching testimonials by email:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while fetching testimonials." });
+  }
+});
+
 // Update Class Types for a Trainer
 router.put("/UpdateTrainerClassTypes", async (req, res) => {
   try {
