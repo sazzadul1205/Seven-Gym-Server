@@ -10,6 +10,7 @@ const TrainersCollection = client.db("Seven-Gym").collection("Trainers");
 router.get("/", async (req, res) => {
   try {
     const {
+      id, // 👈 Added for _id filtering
       name,
       tier,
       email,
@@ -26,7 +27,24 @@ router.get("/", async (req, res) => {
 
     const query = {};
 
-    // Apply filters only if they are provided
+    // 🔍 If only _id is given, return that specific trainer
+    if (id) {
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid trainer ID format." });
+      }
+
+      const trainer = await TrainersCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!trainer) {
+        return res.status(404).json({ error: "Trainer not found." });
+      }
+
+      return res.json(trainer);
+    }
+
+    // 🧠 Apply other filters only if not fetching by ID
     if (name) {
       query.name = { $regex: new RegExp(name, "i") };
     }
@@ -64,10 +82,8 @@ router.get("/", async (req, res) => {
       query["preferences.focusAreas"] = { $in: focusArea.split(",") };
     }
 
-    // Fetch trainers based on filters
     const result = await TrainersCollection.find(query).toArray();
 
-    // Return all trainers if no filters are applied
     if (!Object.keys(query).length) {
       return res.send(await TrainersCollection.find().toArray());
     }
@@ -643,6 +659,49 @@ router.patch("/AddTestimonials/:id", async (req, res) => {
     res
       .status(500)
       .json({ error: "Something went wrong while adding the testimonial." });
+  }
+});
+
+// DELETE testimonial by trainerId and user email
+router.delete("/DeleteTestimonial", async (req, res) => {
+  try {
+    const { trainerId, userEmail } = req.query;
+
+    if (!trainerId || !userEmail) {
+      return res.status(400).json({ error: "Missing trainerId or userEmail." });
+    }
+
+    if (!ObjectId.isValid(trainerId)) {
+      return res.status(400).json({ error: "Invalid trainer ID format." });
+    }
+
+    // Find the trainer to ensure they exist
+    const trainer = await TrainersCollection.findOne({
+      _id: new ObjectId(trainerId),
+    });
+
+    if (!trainer) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    // Remove the testimonial with matching email
+    const updateResult = await TrainersCollection.updateOne(
+      { _id: new ObjectId(trainerId) },
+      { $pull: { testimonials: { email: userEmail } } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "Testimonial not found or already deleted." });
+    }
+
+    res.json({ message: "Testimonial deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting testimonial:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while deleting testimonial." });
   }
 });
 
