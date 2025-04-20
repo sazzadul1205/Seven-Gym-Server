@@ -8,10 +8,28 @@ const Trainer_Session_PaymentCollection = client
   .db("Seven-Gym")
   .collection("Trainer_Session_Payment");
 
-// Get Trainer_Session_Payment
+
+// GET: Fetch by optional _id, bookerEmail, trainerId
 router.get("/", async (req, res) => {
   try {
-    const result = await Trainer_Session_PaymentCollection.find().toArray();
+    const { id, bookerEmail, trainerId } = req.query;
+    const filter = {};
+
+    // If _id is passed, validate and convert to ObjectId
+    if (id) {
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send("Invalid ID format.");
+      }
+      filter._id = new ObjectId(id);
+    }
+
+    // Add optional filters if present
+    if (bookerEmail) filter["sessionInfo.bookerEmail"] = bookerEmail;
+    if (trainerId) filter["sessionInfo.trainerId"] = trainerId;
+
+    const result = await Trainer_Session_PaymentCollection.find(
+      filter
+    ).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainer_Session_Payment:", error);

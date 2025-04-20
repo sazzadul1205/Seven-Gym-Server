@@ -7,10 +7,27 @@ const Trainer_Session_RefundCollection = client
   .db("Seven-Gym")
   .collection("Trainer_Session_Refund");
 
-// Get Trainer_Session_Refund
+// GET: Fetch Trainer_Session_Refund with optional filters
 router.get("/", async (req, res) => {
   try {
-    const result = await Trainer_Session_RefundCollection.find().toArray();
+    const { id, bookerEmail, trainerId } = req.query;
+    const filter = {};
+
+    // Validate and apply _id if provided
+    if (id) {
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send("Invalid ID format.");
+      }
+      filter._id = new ObjectId(id);
+    }
+
+    // Optional nested filters
+    if (bookerEmail) filter["sessionInfo.bookerEmail"] = bookerEmail;
+    if (trainerId) filter["sessionInfo.trainerId"] = trainerId;
+
+    const result = await Trainer_Session_RefundCollection.find(
+      filter
+    ).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainer_Session_Refund:", error);
