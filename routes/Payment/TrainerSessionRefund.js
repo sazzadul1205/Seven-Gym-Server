@@ -21,9 +21,9 @@ router.get("/", async (req, res) => {
       filter._id = new ObjectId(id);
     }
 
-    // Optional nested filters
-    if (bookerEmail) filter["sessionInfo.bookerEmail"] = bookerEmail;
-    if (trainerId) filter["sessionInfo.trainerId"] = trainerId;
+    // Apply nested filters based on actual data structure
+    if (bookerEmail) filter["bookingDataForHistory.bookerEmail"] = bookerEmail;
+    if (trainerId) filter["bookingDataForHistory.trainerId"] = trainerId;
 
     const result = await Trainer_Session_RefundCollection.find(
       filter
@@ -51,6 +51,23 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding Trainer_Session_Refund:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// DELETE: Remove all Trainer_Session_Refund documents
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Trainer_Session_RefundCollection.deleteMany({});
+    res.send({
+      message: "All refund records deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error(
+      "Error deleting all Trainer_Session_Refund documents:",
+      error
+    );
     res.status(500).send("Something went wrong.");
   }
 });

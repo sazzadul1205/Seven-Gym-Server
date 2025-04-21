@@ -8,7 +8,6 @@ const Trainer_Session_PaymentCollection = client
   .db("Seven-Gym")
   .collection("Trainer_Session_Payment");
 
-
 // GET: Fetch by optional _id, bookerEmail, trainerId
 router.get("/", async (req, res) => {
   try {
@@ -73,6 +72,23 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding Trainer_Session_Payment:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// DELETE: Remove all Trainer_Session_Payment documents
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Trainer_Session_PaymentCollection.deleteMany({});
+    res.send({
+      message: "All payment records deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error(
+      "Error deleting all Trainer_Session_Payment documents:",
+      error
+    );
     res.status(500).send("Something went wrong.");
   }
 });
