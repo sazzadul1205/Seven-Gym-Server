@@ -22,9 +22,9 @@ router.get("/", async (req, res) => {
       filter._id = new ObjectId(id);
     }
 
-    // Add optional filters if present
-    if (bookerEmail) filter["sessionInfo.bookerEmail"] = bookerEmail;
-    if (trainerId) filter["sessionInfo.trainerId"] = trainerId;
+    // Correct filters based on your data structure
+    if (bookerEmail) filter["BookingInfo.bookerEmail"] = bookerEmail;
+    if (trainerId) filter["BookingInfo.trainerId"] = trainerId;
 
     const result = await Trainer_Session_PaymentCollection.find(
       filter
