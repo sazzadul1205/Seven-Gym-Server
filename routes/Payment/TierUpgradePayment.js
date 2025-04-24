@@ -1,16 +1,37 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Tier_Upgrade_Payment
 const Tier_Upgrade_PaymentCollection = client
   .db("Seven-Gym")
   .collection("Tier_Upgrade_Payment");
 
-// Get Tier_Upgrade_Payment
+// Get Tier_Upgrade_Payment with optional filters
 router.get("/", async (req, res) => {
   try {
-    const result = await Tier_Upgrade_PaymentCollection.find().toArray();
+    const { _id, email, tier, duration, stripePaymentID } = req.query;
+
+    const query = {};
+
+    if (_id) {
+      query._id = new ObjectId(_id);
+    }
+    if (email) {
+      query.email = email;
+    }
+    if (tier) {
+      query.tier = tier;
+    }
+    if (duration) {
+      query.duration = duration;
+    }
+    if (stripePaymentID) {
+      query.stripePaymentID = stripePaymentID;
+    }
+
+    const result = await Tier_Upgrade_PaymentCollection.find(query).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Tier_Upgrade_Payment:", error);

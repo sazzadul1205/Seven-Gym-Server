@@ -1,16 +1,41 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Tier_Upgrade_Refund
 const Tier_Upgrade_RefundCollection = client
   .db("Seven-Gym")
   .collection("Tier_Upgrade_Refund");
 
-// Get Tier_Upgrade_Refund
+// Get Tier_Upgrade_Refund with optional filters
 router.get("/", async (req, res) => {
   try {
-    const result = await Tier_Upgrade_RefundCollection.find().toArray();
+    const { _id, email, RefundID, linkedPaymentReceptID } = req.query;
+
+    const query = {};
+
+    if (_id) {
+      try {
+        query._id = new ObjectId(_id);
+      } catch {
+        return res.status(400).send("Invalid _id format.");
+      }
+    }
+
+    if (email) {
+      query.email = email;
+    }
+
+    if (RefundID) {
+      query.RefundID = RefundID;
+    }
+
+    if (linkedPaymentReceptID) {
+      query.linkedPaymentReceptID = linkedPaymentReceptID;
+    }
+
+    const result = await Tier_Upgrade_RefundCollection.find(query).toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Tier_Upgrade_Refund:", error);
