@@ -49,7 +49,7 @@ const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
 const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
 const CleanupTrainerSessions = require("./routes/Automatic/cleanupTrainerSessions");
-const CleanupExpiredTrainerBookings = require("./routes/Automatic/cleanupExpiredTrainerBookings");
+const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpiredTrainerBookings");
 
 require("dotenv").config();
 const app = express();
