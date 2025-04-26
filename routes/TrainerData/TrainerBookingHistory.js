@@ -25,6 +25,79 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get trainer report
+router.get("/DailyStats", async (req, res) => {
+  try {
+    const { trainerId } = req.query;
+
+    if (!trainerId) {
+      return res.status(400).send("Trainer ID is required.");
+    }
+
+    const data = await Trainer_Booking_HistoryCollection.find({
+      trainerId,
+    }).toArray();
+
+    const refundedData = {};
+    const endedData = [];
+
+    for (const item of data) {
+      if (item.status === "Ended") {
+        // Calculate end date properly
+        if (item.startAt && item.durationWeeks) {
+          const startDate = new Date(item.startAt);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + item.durationWeeks * 7 - 1); // -1 to make it realistic
+
+          const day = String(endDate.getDate()).padStart(2, "0");
+          const month = String(endDate.getMonth() + 1).padStart(2, "0"); // Month is zero-indexed
+          const year = endDate.getFullYear();
+
+          endedData.push({
+            status: "Ended",
+            "date Ended": `${day}-${month}-${year}`,
+            sessions: item.sessions.length,
+            totalEarned: parseFloat(item.totalPrice),
+          });
+        }
+      } else {
+        // Group by droppedAt date for refunds
+        if (item.droppedAt) {
+          const droppedDate = item.droppedAt.split(" ")[0].replaceAll("/", "-"); // Normalize if needed
+          const [day, month, year] = droppedDate.includes("-")
+            ? droppedDate.split("-")
+            : droppedDate.split("/");
+
+          const formattedDate = `${day.padStart(2, "0")}-${month.padStart(
+            2,
+            "0"
+          )}-${year}`;
+
+          if (!refundedData[formattedDate]) {
+            refundedData[formattedDate] = {
+              date: formattedDate,
+              sessions: 0,
+              totalRefundedAmount: 0,
+            };
+          }
+
+          refundedData[formattedDate].sessions += item.sessions.length;
+          refundedData[formattedDate].totalRefundedAmount += item.RefundAmount
+            ? parseFloat(item.RefundAmount)
+            : 0;
+        }
+      }
+    }
+
+    const finalResult = [...Object.values(refundedData), ...endedData];
+
+    res.send(finalResult);
+  } catch (error) {
+    console.error("Error generating trainer report:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Get all booking history by trainerId
 router.get("/Trainer/:trainerId", async (req, res) => {
   try {

@@ -74,6 +74,52 @@ router.get("/Trainer/:trainerName", async (req, res) => {
   }
 });
 
+// GET: Aggregated daily stats for a trainer
+router.get("/DailyStats", async (req, res) => {
+  try {
+    const { trainerId } = req.query;
+
+    if (
+      !trainerId ||
+      typeof trainerId !== "string" ||
+      !ObjectId.isValid(trainerId)
+    ) {
+      return res.status(400).send("Invalid or missing trainerId.");
+    }
+
+    const bookings = await Trainer_Booking_AcceptedCollection.find({
+      trainerId,
+    }).toArray();
+
+    if (!bookings.length) {
+      return res.status(404).send("No bookings found for the given trainerId.");
+    }
+
+    const dailyStats = {};
+
+    bookings.forEach((booking) => {
+      const day = booking.bookedAt.split("T")[0]; // Extract only "22-04-2025"
+
+      if (!dailyStats[day]) {
+        dailyStats[day] = { day, sessions: 0, totalPrice: 0 };
+      }
+
+      dailyStats[day].sessions += booking.sessions.length;
+      dailyStats[day].totalPrice += parseFloat(booking.totalPrice || "0");
+    });
+
+    const result = Object.values(dailyStats).map((entry) => ({
+      ...entry,
+      totalPrice: entry.totalPrice.toFixed(2), // Format totalPrice back to string
+    }));
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching trainer daily stats:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST Trainer_Booking_Accepted
 router.post("/", async (req, res) => {
   try {
