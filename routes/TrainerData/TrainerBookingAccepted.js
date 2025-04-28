@@ -98,19 +98,28 @@ router.get("/DailyStats", async (req, res) => {
     const dailyStats = {};
 
     bookings.forEach((booking) => {
-      const day = booking.bookedAt.split("T")[0]; // Extract only "22-04-2025"
+      const day = booking.bookedAt.split("T")[0]; // "22-04-2025"
 
       if (!dailyStats[day]) {
-        dailyStats[day] = { day, sessions: 0, totalPrice: 0 };
+        dailyStats[day] = {
+          day,
+          sessions: 0,
+          totalPrice: 0,
+          estimatedEarnings: 0,
+        };
       }
 
+      const price = parseFloat(booking.totalPrice || "0");
+
       dailyStats[day].sessions += booking.sessions.length;
-      dailyStats[day].totalPrice += parseFloat(booking.totalPrice || "0");
+      dailyStats[day].totalPrice += price;
+      dailyStats[day].estimatedEarnings += price; // Raw number
     });
 
     const result = Object.values(dailyStats).map((entry) => ({
       ...entry,
-      totalPrice: entry.totalPrice.toFixed(2), // Format totalPrice back to string
+      totalPrice: entry.totalPrice.toFixed(2), // string version
+      estimatedEarnings: entry.estimatedEarnings, // raw number version
     }));
 
     res.send(result);
