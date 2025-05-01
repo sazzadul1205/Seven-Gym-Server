@@ -21,6 +21,11 @@ const checkExpiredPendingBookings = async () => {
   try {
     const now = new Date();
 
+    // Generate current loggedTime in "dd mm yyyy hh:mm" format
+    const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
+    const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+    const loggedTime = `${date} ${time}`;
+
     const pendingBookings = await Trainer_Booking_RequestCollection.find({
       status: "Pending",
     }).toArray();
@@ -32,37 +37,31 @@ const checkExpiredPendingBookings = async () => {
     });
 
     if (outdatedBookings.length > 0) {
-      const expiredBookings = outdatedBookings.map((booking) => {
-        // Format the expiredAt date in the desired format: DD-MM-YYYY T HH:MM
-        const expiredAt = `${now.getDate().toString().padStart(2, "0")}-${(
-          now.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}-${now.getFullYear()}T${now
-          .getHours()
-          .toString()
-          .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+      const expiredIds = outdatedBookings.map((booking) => booking._id);
 
-        return {
-          ...booking,
-          expiredAt,
-        };
-      });
-
-      const expiredIds = expiredBookings.map((booking) => booking._id);
+      // Format expiredAt for record-keeping
+      const expiredAt = `${now.getDate().toString().padStart(2, "0")}-${(
+        now.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}-${now.getFullYear()}T${now
+        .getHours()
+        .toString()
+        .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
       await Trainer_Booking_RequestCollection.updateMany(
         { _id: { $in: expiredIds } },
         {
           $set: {
             status: "Expired",
-            expiredAt: expiredBookings[0].expiredAt, // Set expiredAt field for the first item
+            expiredAt,
+            loggedTime,
           },
         }
       );
 
       console.log(
-        `✅ ${expiredBookings.length} outdated bookings marked as Expired & expiredAt added.`
+        `✅ ${expiredIds.length} outdated bookings marked as Expired with loggedTime "${loggedTime}".`
       );
     } else {
       console.log("No outdated pending bookings found.");

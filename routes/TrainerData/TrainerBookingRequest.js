@@ -79,17 +79,27 @@ router.get("/Trainer/:trainerName", async (req, res) => {
 // Post request to create a new booking request
 router.post("/", async (req, res) => {
   try {
-    const newRequest = req.body; // Assuming the request body contains the new booking details
+    let newRequest = req.body;
 
     if (!newRequest) {
       return res.status(400).send("Invalid request data.");
     }
 
+    // Inject loggedTime in format: dd mm yyyy hh:mm
+    const now = new Date();
+    const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
+    const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+    const loggedTime = `${date} ${time}`;
+
+    newRequest = {
+      ...newRequest,
+      loggedTime,
+    };
+
     const result = await Trainer_Booking_RequestCollection.insertOne(
       newRequest
     );
 
-    // Check if the insertedId exists
     if (result.insertedId) {
       res.status(201).send({
         message: "Booking request created successfully.",
@@ -107,21 +117,26 @@ router.post("/", async (req, res) => {
 // Update a Trainer Booking Request by _id
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
-  const updateFields = req.body;
+  const updateFields = { ...req.body };
 
   try {
+    const now = new Date();
+    const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
+    const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+    const loggedTime = `${date} ${time}`;
+    updateFields.loggedTime = loggedTime;
+
     const result = await Trainer_Booking_RequestCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateFields }
     );
 
     if (result.modifiedCount === 0) {
+      console.warn("No document modified. Check ID or data.");
       return res
         .status(404)
         .send({ message: "Booking not found or nothing changed." });
     }
-
-    res.send({ message: "Booking updated successfully.", result });
   } catch (error) {
     console.error("Error updating booking:", error);
     res.status(500).send({ message: "Failed to update booking." });
