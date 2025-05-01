@@ -114,30 +114,38 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update a Trainer Booking Request by _id
+// PATCH: Update a Trainer Booking Request by ID
 router.patch("/:id", async (req, res) => {
-  const { id } = req.params;
-  const updateFields = { ...req.body };
+  const { id } = req.params; // Extract booking request ID from URL params
+  const updateFields = { ...req.body }; // Clone the incoming update fields
 
   try {
+    // Generate current timestamp in 'dd mm yyyy hh:mm' format
     const now = new Date();
-    const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
-    const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+    const date = now.toLocaleDateString("en-GB").split("/").join(" "); // e.g., '01 05 2025'
+    const time = now.toTimeString().split(" ")[0].slice(0, 5); // e.g., '14:32'
     const loggedTime = `${date} ${time}`;
-    updateFields.loggedTime = loggedTime;
 
+    updateFields.loggedTime = loggedTime; // Append server-side timestamp
+
+    // Perform the database update
     const result = await Trainer_Booking_RequestCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateFields }
     );
 
+    // If no document was modified, respond accordingly
     if (result.modifiedCount === 0) {
       console.warn("No document modified. Check ID or data.");
       return res
         .status(404)
         .send({ message: "Booking not found or nothing changed." });
     }
+
+    // ✅ Send success response so the frontend can proceed
+    return res.status(200).send({ message: "Booking updated successfully." });
   } catch (error) {
+    // Log and return error message on failure
     console.error("Error updating booking:", error);
     res.status(500).send({ message: "Failed to update booking." });
   }

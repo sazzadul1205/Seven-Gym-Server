@@ -135,6 +135,14 @@ router.post("/", async (req, res) => {
     const paymentData = { ...req.body };
     delete paymentData._id; // Important: let Mongo generate a new _id
 
+    // Inject or update loggedTime in format: dd mm yyyy hh:mm
+    const now = new Date();
+    const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
+    const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+    const loggedTime = `${date} ${time}`;
+
+    paymentData.loggedTime = loggedTime;
+
     const result = await Trainer_Booking_AcceptedCollection.insertOne(
       paymentData
     );
@@ -159,7 +167,14 @@ router.put("/Update/:id", async (req, res) => {
   const { id } = req.params;
 
   let updatedData = { ...req.body };
-  delete updatedData._id; // Don't allow _id update
+  delete updatedData._id; // Prevent _id from being overwritten
+
+  // Inject or update loggedTime in format: dd mm yyyy hh:mm
+  const now = new Date();
+  const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
+  const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+  const loggedTime = `${date} ${time}`;
+  updatedData.loggedTime = loggedTime;
 
   try {
     const result = await Trainer_Booking_AcceptedCollection.updateOne(
@@ -175,7 +190,10 @@ router.put("/Update/:id", async (req, res) => {
       _id: new ObjectId(id),
     });
 
-    res.send(updatedDoc);
+    // ✅ Send success response so the frontend can proceed
+    return res
+      .status(200)
+      .send({ message: "Accepted Booking updated successfully." });
   } catch (error) {
     console.error("Error updating Trainer_Booking_Accepted:", error);
     res.status(500).send("Something went wrong.");

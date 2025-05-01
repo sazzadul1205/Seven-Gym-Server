@@ -128,17 +128,24 @@ router.get("/Trainer/:trainerId", async (req, res) => {
 // Post request to create a new booking request
 router.post("/", async (req, res) => {
   try {
-    const newRequest = req.body; // Assuming the request body contains the new booking details
+    const newRequest = { ...req.body };
 
     if (!newRequest || !newRequest.status) {
       return res.status(400).send("Invalid request data. Status is required.");
+    }
+
+    // Only update loggedTime if it already exists in the request
+    if ("loggedTime" in newRequest) {
+      const now = new Date();
+      const date = now.toLocaleDateString("en-GB").split("/").join(" "); // dd mm yyyy
+      const time = now.toTimeString().split(" ")[0].slice(0, 5); // hh:mm
+      newRequest.loggedTime = `${date} ${time}`;
     }
 
     const result = await Trainer_Booking_HistoryCollection.insertOne(
       newRequest
     );
 
-    // Check if the insertedId exists
     if (result.insertedId) {
       res.status(201).send({
         message: "Booking History request Created successfully.",
