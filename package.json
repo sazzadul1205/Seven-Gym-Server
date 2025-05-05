@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "express": "^4.21.2",
     "mongodb": "^6.11.0",
     "node-cron": "^3.0.3",
+    "nodemon": "^3.1.10",
     "stripe": "^17.5.0"
   }
 }
