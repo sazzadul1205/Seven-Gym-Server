@@ -8,24 +8,30 @@ const TrainerAnnouncementCollection = client
   .db("Seven-Gym")
   .collection("Trainer_Announcement");
 
-// GET : All trainer announcements or filtered by trainerID
+// GET: All trainer announcements or filtered by one or more trainerIDs
 router.get("/", async (req, res) => {
   try {
-    const { trainerID } = req.query;
+    let { trainerID } = req.query;
 
-    // If trainerID is provided, filter by it; otherwise, fetch all
-    const filter = trainerID ? { trainerID } : {};
+    // Normalize trainerID to an array if it's provided
+    if (trainerID) {
+      // If trainerID is already an array (e.g., ?trainerID=1&trainerID=2), use it as is
+      // If it's a single string, wrap it in an array
+      trainerID = Array.isArray(trainerID) ? trainerID : [trainerID];
+    }
+
+    // Build filter
+    const filter = trainerID ? { trainerID: { $in: trainerID } } : {};
 
     const announcements = await TrainerAnnouncementCollection.find(
       filter
     ).toArray();
 
-    // If there's exactly one announcement, return it as an object
+    // Return a single object if only one result is found
     if (announcements.length === 1) {
       return res.status(200).json(announcements[0]);
     }
 
-    // Otherwise, return all announcements as an array
     res.status(200).json(announcements);
   } catch (error) {
     console.error("Error fetching trainer announcements:", error);
