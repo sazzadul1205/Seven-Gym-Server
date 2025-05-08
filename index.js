@@ -1,4 +1,5 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
 // Connect Database
@@ -68,6 +69,40 @@ app.use(express.json());
 
 // Connect to the database
 connectDB();
+
+// Auth Related Route - issue server-signed JWT
+app.post("/jwt", async (req, res) => {
+  try {
+    const { user } = req.body;
+
+    // Validate presence and format
+    if (!user || typeof user !== "object") {
+      return res.status(400).json({ message: "Missing user object." });
+    }
+
+    const { id, email, role = "user" } = user;
+
+    if (!id || !email) {
+      return res.status(400).json({ message: "Invalid user data." });
+    }
+
+    const payload = { id, email, role };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || "default_secret",
+      {
+        expiresIn: "10d",
+        issuer: "www.Seven-Gym-Auth.com", // optional, for structure
+      }
+    );
+
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error("JWT generation error:", error.message);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
 
 // Use routes
 app.use("/Users", Users);
