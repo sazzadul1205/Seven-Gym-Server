@@ -291,6 +291,45 @@ router.put("/Update", async (req, res) => {
   }
 });
 
+// Add a new trainer schedule
+router.post("/", async (req, res) => {
+  try {
+    const scheduleData = req.body;
+
+    // Basic validation
+    if (!scheduleData || !scheduleData.trainerName || !scheduleData.email) {
+      return res.status(400).json({
+        error: "trainerName and email are required to create a schedule.",
+      });
+    }
+
+    // Optional: Check for duplicate schedule by trainerName and email
+    const existing = await Trainers_ScheduleCollection.findOne({
+      trainerName: scheduleData.trainerName,
+      email: scheduleData.email,
+    });
+
+    if (existing) {
+      return res
+        .status(409)
+        .json({ error: "Schedule for this trainer already exists." });
+    }
+
+    // Insert the new schedule
+    const result = await Trainers_ScheduleCollection.insertOne(scheduleData);
+
+    res.status(201).json({
+      message: "Trainer schedule added successfully.",
+      insertedId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error adding trainer schedule:", error.message);
+    res.status(500).json({
+      error: "Something went wrong while adding the trainer schedule.",
+    });
+  }
+});
+
 // Check class Valid or Available
 router.post("/SessionValidation", async (req, res) => {
   try {

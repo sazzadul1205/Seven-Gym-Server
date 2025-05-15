@@ -409,6 +409,44 @@ router.get("/TestimonialsByEmail", async (req, res) => {
   }
 });
 
+// Route to add a new trainer
+router.post("/", async (req, res) => {
+  try {
+    const trainerData = req.body;
+
+    // Basic validation: check for required fields
+    if (!trainerData || !trainerData.name || !trainerData.email) {
+      return res
+        .status(400)
+        .json({ error: "Trainer name and email are required." });
+    }
+
+    // Optional: Check if a trainer with the same email already exists
+    const existingTrainer = await TrainersCollection.findOne({
+      email: trainerData.email,
+    });
+
+    if (existingTrainer) {
+      return res
+        .status(409)
+        .json({ error: "A trainer with this email already exists." });
+    }
+
+    // Insert trainer
+    const result = await TrainersCollection.insertOne(trainerData);
+
+    res.status(201).json({
+      message: "Trainer added successfully.",
+      insertedId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error adding trainer:", error.message);
+    res
+      .status(500)
+      .json({ error: "Something went wrong while adding the trainer." });
+  }
+});
+
 // Update Class Types for a Trainer
 router.put("/UpdateTrainerClassTypes", async (req, res) => {
   try {
