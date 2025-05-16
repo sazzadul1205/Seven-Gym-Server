@@ -32,6 +32,7 @@ const TrainerBookingHistory = require("./routes/TrainerData/TrainerBookingHistor
 const TrainerBookingRequest = require("./routes/TrainerData/TrainerBookingRequest");
 const TrainerStudentHistory = require("./routes/TrainerData/TrainerStudentHistory");
 const TrainerBookingAccepted = require("./routes/TrainerData/TrainerBookingAccepted");
+const TrainerClassInformation = require("./routes/TrainerData/TrainerClassInformation");
 
 // User Schedule
 const UserSchedule = require("./routes/UserSchedule/UserSchedule");
@@ -132,6 +133,7 @@ app.use("/Trainer_Booking_History", TrainerBookingHistory);
 app.use("/Trainer_Booking_Request", TrainerBookingRequest);
 app.use("/Trainer_Student_History", TrainerStudentHistory);
 app.use("/Trainer_Booking_Accepted", TrainerBookingAccepted);
+app.use("/Trainer_Class_Information", TrainerClassInformation);
 
 // User Schedule
 app.use("/User_Schedule", UserSchedule);
