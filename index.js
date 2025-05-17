@@ -52,7 +52,7 @@ const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
 const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
 const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
-const CleanupTrainerSessions = require("./routes/Automatic/cleanupTrainerSessions");
+const CleanupTrainerSessions = require("./routes/Automatic/CleanupTrainerSessions");
 const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpiredTrainerBookings");
 
 require("dotenv").config();
@@ -161,7 +161,6 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
