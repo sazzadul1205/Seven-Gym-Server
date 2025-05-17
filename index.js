@@ -1,3 +1,4 @@
+// index.js
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
@@ -5,7 +6,7 @@ const cors = require("cors");
 // Connect Database
 const { connectDB } = require("./config/db");
 
-// API callas
+// API routes
 const Users = require("./routes/Users");
 const Forums = require("./routes/Forums");
 const AboutUs = require("./routes/AboutUs");
@@ -56,12 +57,15 @@ const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpired
 
 require("dotenv").config();
 const app = express();
-const port = process.env.PORT || 5000;
 
-// Middle Ware
+// CORS – add your prod domains here
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.0.11:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://your-app.vercel.app",
+      "https://www.your-custom-domain.com",
+    ],
     credentials: true,
   })
 );
@@ -71,41 +75,30 @@ app.use(express.json());
 // Connect to the database
 connectDB();
 
-// Auth Related Route - issue server-signed JWT
+// Auth endpoint: issues JWT
 app.post("/jwt", async (req, res) => {
   try {
     const { user } = req.body;
-
-    // Validate presence and format
     if (!user || typeof user !== "object") {
       return res.status(400).json({ message: "Missing user object." });
     }
-
     const { id, email, role = "user" } = user;
-
     if (!id || !email) {
       return res.status(400).json({ message: "Invalid user data." });
     }
-
     const payload = { id, email, role };
-
-    const token = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || "default_secret",
-      {
-        expiresIn: "10d",
-        issuer: "www.Seven-Gym-Auth.com", // optional, for structure
-      }
-    );
-
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "10d",
+      issuer: "www.Seven-Gym-Auth.com",
+    });
     res.status(200).json({ token });
   } catch (error) {
-    console.error("JWT generation error:", error.message);
+    console.error("JWT generation error:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 });
 
-// Use routes
+// Mount routes
 app.use("/Users", Users);
 app.use("/Forums", Forums);
 app.use("/AboutUs", AboutUs);
@@ -121,7 +114,6 @@ app.use("/Class_Details", ClassDetails);
 app.use("/Home_Banner_Section", HomeBanner);
 app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
-app.use("/Home_Services_Section", HomeServices);
 app.use("/Our_Classes_Schedule", OurClassesSchedule);
 app.use("/Class_Booking_Request", ClassBookingRequest);
 
@@ -134,7 +126,6 @@ app.use("/Trainer_Booking_Request", TrainerBookingRequest);
 app.use("/Trainer_Student_History", TrainerStudentHistory);
 app.use("/Trainer_Booking_Accepted", TrainerBookingAccepted);
 app.use("/Trainer_Class_Information", TrainerClassInformation);
-
 // User Schedule
 app.use("/User_Schedule", UserSchedule);
 
@@ -155,16 +146,12 @@ app.use("/BookingSessionExpire", BookingSessionExpire);
 app.use("/CleanupTrainerSessions", CleanupTrainerSessions);
 app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 
-// Set up the basic route
+// Root health-check
 app.get("/", (req, res) => {
   res.send("Seven Gym is Running");
 });
 
-// Listen on the specified port
-app.listen(port, () => {
-  console.log(`Seven Gym is Running on Port: ${port}`);
-});
-
+// Error handlers
 process.on("uncaughtException", (err) => {
   console.error("There was an uncaught error", err);
 });
@@ -172,3 +159,6 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
+
+// Export for Vercel serverless
+module.exports = app;
