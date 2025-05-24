@@ -447,6 +447,39 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PATCH : Updater Tier of The Trainer According to the Trainer Id 
+router.patch("/UpdateTier", async (req, res) => {
+  try {
+    const { id, newTier } = req.body;
+
+    if (!id || !newTier) {
+      return res
+        .status(400)
+        .json({ error: "Trainer ID and new tier are required." });
+    }
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid trainer ID format." });
+    }
+
+    const result = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { tier: newTier } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "Trainer not found or tier already set." });
+    }
+
+    res.json({ success: true, message: "Trainer tier updated successfully." });
+  } catch (error) {
+    console.error("Error updating tier:", error.message);
+    res.status(500).json({ error: "Failed to update trainer tier." });
+  }
+});
+
 // Update Class Types for a Trainer
 router.put("/UpdateTrainerClassTypes", async (req, res) => {
   try {
