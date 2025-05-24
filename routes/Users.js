@@ -222,6 +222,37 @@ router.post("/Add_Workout", async (req, res) => {
   }
 });
 
+// POST : Add Ban Info to a User
+router.post("/AddBanElement/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid user ID format." });
+    }
+
+    const banData = req.body;
+
+    if (!banData || typeof banData !== "object") {
+      return res.status(400).json({ error: "Ban data is missing or invalid." });
+    }
+
+    const updateResult = await UsersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ban: banData } }
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.json({ message: "User banned successfully." });
+  } catch (error) {
+    console.error("Error banning user:", error.message);
+    res.status(500).json({ error: "Failed to ban user." });
+  }
+});
+
 // Update User Data (PATCH API)
 router.patch("/", async (req, res) => {
   try {
@@ -251,6 +282,31 @@ router.patch("/", async (req, res) => {
   } catch (error) {
     console.error("Error updating user data:", error);
     res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+// PATCH : Remove Ban Info from a User
+router.patch("/UnBan/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid user ID format." });
+    }
+
+    const updateResult = await UsersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $unset: { ban: "" } }
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.json({ message: "User unbanned successfully." });
+  } catch (error) {
+    console.error("Error unbanning user:", error.message);
+    res.status(500).json({ error: "Failed to unban user." });
   }
 });
 
@@ -347,7 +403,7 @@ router.put("/toggle-award-favorite", async (req, res) => {
   }
 });
 
-// UPDATE : Trainer Role Update 
+// UPDATE : Trainer Role Update
 router.put("/UpdateRole", async (req, res) => {
   try {
     const { id, email, role } = req.body;
