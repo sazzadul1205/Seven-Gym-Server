@@ -462,9 +462,10 @@ router.post("/AddBanElement/:id", async (req, res) => {
       return res.status(400).json({ error: "Ban data is missing or invalid." });
     }
 
+    // Set the 'ban' field to the new banData (overwrite any existing ban)
     const updateResult = await TrainersCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $push: { bans: banData } } // 👈 Push into `bans` array
+      { $set: { ban: banData } }
     );
 
     if (updateResult.matchedCount === 0) {
@@ -473,8 +474,33 @@ router.post("/AddBanElement/:id", async (req, res) => {
 
     res.json({ message: "Ban added successfully." });
   } catch (error) {
-    console.error("Error pushing ban:", error.message);
-    res.status(500).json({ error: "Failed to push ban." });
+    console.error("Error setting ban:", error.message);
+    res.status(500).json({ error: "Failed to set ban." });
+  }
+});
+
+// PATCH : Remove the Ban Object from the Trainer
+router.patch("/UnBan/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid trainer ID format." });
+    }
+
+    const updateResult = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $unset: { ban: "" } } // Remove the 'ban' field
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({ message: "Trainer unbanned successfully." });
+  } catch (error) {
+    console.error("Error unbanning trainer:", error.message);
+    res.status(500).json({ error: "Failed to unban trainer." });
   }
 });
 
