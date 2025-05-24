@@ -447,6 +447,37 @@ router.post("/", async (req, res) => {
   }
 });
 
+// POST : Inputs the Ban Element in to the Corresponding Trainer
+router.post("/AddBanElement/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid trainer ID format." });
+    }
+
+    const banData = req.body;
+
+    if (!banData || typeof banData !== "object") {
+      return res.status(400).json({ error: "Ban data is missing or invalid." });
+    }
+
+    const updateResult = await TrainersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $push: { bans: banData } } // 👈 Push into `bans` array
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    res.json({ message: "Ban added successfully." });
+  } catch (error) {
+    console.error("Error pushing ban:", error.message);
+    res.status(500).json({ error: "Failed to push ban." });
+  }
+});
+
 // PATCH : Updater Tier of The Trainer According to the Trainer Id
 router.patch("/UpdateTier", async (req, res) => {
   try {
