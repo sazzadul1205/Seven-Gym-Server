@@ -55,6 +55,9 @@ const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
 const CleanupTrainerSessions = require("./routes/Automatic/CleanupTrainerSessions");
 const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpiredTrainerBookings");
 
+// Admin Firebase Delete User
+const AdminDeleteUser = require("./routes/FireBase/FirebaseDeleteUser/FirebaseDeleteUser");
+
 require("dotenv").config();
 const app = express();
 
@@ -145,6 +148,9 @@ app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
 app.use("/BookingSessionExpire", BookingSessionExpire);
 app.use("/CleanupTrainerSessions", CleanupTrainerSessions);
 app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
+
+// Admin Firebase Delete User
+app.use("/AdminAdminDeleteUser", AdminDeleteUser);
 
 // Root health-check
 app.get("/", (req, res) => {
