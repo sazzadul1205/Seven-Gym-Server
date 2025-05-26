@@ -99,4 +99,19 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// DELETE : all Tier_Upgrade_Payment records (Use with caution!)
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Tier_Upgrade_PaymentCollection.deleteMany({});
+
+    res.status(200).send({
+      message: "All Tier Upgrade Payment records have been deleted.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting all Tier_Upgrade_Payment records:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;
