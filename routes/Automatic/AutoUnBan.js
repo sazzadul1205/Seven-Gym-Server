@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const cron = require("node-cron");
-const { client } = require("../../config/db"); 
+const { client } = require("../../config/db");
 
 const UsersCollection = client.db("Seven-Gym").collection("Users");
 const TrainersCollection = client.db("Seven-Gym").collection("Trainers");
@@ -28,6 +28,15 @@ const AutoUnBanHandler = async () => {
 
       const toUnBan = bannedDocs.filter((doc) => {
         if (!doc.ban?.End) return false;
+
+        const endVal = doc.ban.End.toString().toLowerCase();
+        const durationVal = doc.ban.Duration?.toString().toLowerCase();
+
+        // Skip if Permanent or Indefinite
+        if (endVal === "indefinite" || durationVal === "permanent") {
+          return false;
+        }
+
         return formatDate(doc.ban.End) === today;
       });
 
