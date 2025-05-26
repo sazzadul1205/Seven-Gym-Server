@@ -54,6 +54,7 @@ const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
 const CleanupTrainerSessions = require("./routes/Automatic/CleanupTrainerSessions");
 const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpiredTrainerBookings");
+const AutoUnBan = require("./routes/Automatic/AutoUnBan");
 
 // Admin Firebase Delete User
 const AdminDeleteUser = require("./routes/FireBase/FirebaseDeleteUser/FirebaseDeleteUser");
@@ -129,6 +130,7 @@ app.use("/Trainer_Booking_Request", TrainerBookingRequest);
 app.use("/Trainer_Student_History", TrainerStudentHistory);
 app.use("/Trainer_Booking_Accepted", TrainerBookingAccepted);
 app.use("/Trainer_Class_Information", TrainerClassInformation);
+
 // User Schedule
 app.use("/User_Schedule", UserSchedule);
 
@@ -143,10 +145,12 @@ app.use("/Stripe_Refund_Intent", StripeRefundIntent);
 app.use("/Stripe_Payment_Intent", StripePaymentIntent);
 
 // Automatic
+app.use("/AutoUnBan", AutoUnBan);
 app.use("/CheckExpiredTiers", CheckExpiredTiers);
 app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
 app.use("/BookingSessionExpire", BookingSessionExpire);
 app.use("/CleanupTrainerSessions", CleanupTrainerSessions);
+app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 
 // Admin Firebase Delete User
