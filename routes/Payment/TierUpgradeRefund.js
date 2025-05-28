@@ -47,21 +47,25 @@ router.get("/", async (req, res) => {
 router.get("/search", async (req, res) => {
   try {
     const { refundID, _id, email } = req.query;
-    let query = {};
 
-    if (refundID) {
-      query.RefundID = refundID;
-    }
-    if (_id) {
-      // Convert _id string to ObjectId
-      query._id = ObjectId(_id);
-    }
-    if (email) {
-      query.email = email;
-    }
+    // Build the query object dynamically
+    if (refundID) query.RefundID = refundID;
+    if (_id) query._id = ObjectId(_id);
+    if (email) query.email = email;
 
+    // Execute the query
     const result = await Tier_Upgrade_RefundCollection.find(query).toArray();
-    res.send(result);
+
+    if (result.length === 1) {
+      res.status(200).send(result[0]); // Send the single object
+    } else if (result.length > 1) {
+      res.status(200).send(result); // Send array if multiple
+    } else {
+      res.status(404).send({
+        message: "No records found matching the query.",
+        query: query,
+      });
+    }
   } catch (error) {
     console.error("Error searching Tier_Upgrade_Refund:", error);
     res.status(500).send("Something went wrong.");

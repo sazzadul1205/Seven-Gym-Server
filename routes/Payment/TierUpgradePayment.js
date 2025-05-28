@@ -72,10 +72,9 @@ router.post("/", async (req, res) => {
 // Query by paymentID, email, paymentMethod, or tier
 router.get("/search", async (req, res) => {
   try {
-    // Extract query parameters
     const { paymentID, email, paymentMethod, tier } = req.query;
 
-    // Build the query object dynamically based on provided parameters
+    // Build the query object dynamically
     const query = {};
     if (paymentID) query.paymentID = paymentID;
     if (email) query.email = email;
@@ -85,8 +84,10 @@ router.get("/search", async (req, res) => {
     // Execute the query
     const result = await Tier_Upgrade_PaymentCollection.find(query).toArray();
 
-    if (result.length > 0) {
-      res.status(200).send(result);
+    if (result.length === 1) {
+      res.status(200).send(result[0]); // Send the single object
+    } else if (result.length > 1) {
+      res.status(200).send(result); // Send array if multiple
     } else {
       res.status(404).send({
         message: "No records found matching the query.",
