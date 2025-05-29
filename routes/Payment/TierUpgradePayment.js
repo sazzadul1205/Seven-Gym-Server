@@ -74,29 +74,37 @@ router.get("/search", async (req, res) => {
   try {
     const { paymentID, email, paymentMethod, tier } = req.query;
 
-    // Build the query object dynamically
+    // Initialize dynamic query object
     const query = {};
     if (paymentID) query.paymentID = paymentID;
     if (email) query.email = email;
     if (paymentMethod) query.paymentMethod = paymentMethod;
     if (tier) query.tier = tier;
 
-    // Execute the query
+    // Ensure at least one query parameter is provided
+    if (Object.keys(query).length === 0) {
+      return res.status(400).send({
+        message:
+          "Please provide at least one search parameter: paymentID, email, paymentMethod, or tier.",
+      });
+    }
+
+    // Execute query
     const result = await Tier_Upgrade_PaymentCollection.find(query).toArray();
 
     if (result.length === 1) {
-      res.status(200).send(result[0]); // Send the single object
+      return res.status(200).send(result[0]); // Single match
     } else if (result.length > 1) {
-      res.status(200).send(result); // Send array if multiple
+      return res.status(200).send(result); // Multiple matches
     } else {
-      res.status(404).send({
+      return res.status(404).send({
         message: "No records found matching the query.",
         query: query,
       });
     }
   } catch (error) {
     console.error("Error querying Tier_Upgrade_Payment:", error);
-    res.status(500).send("Something went wrong.");
+    return res.status(500).send("Something went wrong.");
   }
 });
 

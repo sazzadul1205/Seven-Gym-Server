@@ -47,25 +47,30 @@ router.get("/", async (req, res) => {
 router.get("/search", async (req, res) => {
   try {
     const { refundID, _id, email } = req.query;
+    const query = {};
 
-    // Build the query object dynamically
     if (refundID) query.RefundID = refundID;
-    if (_id) query._id = ObjectId(_id);
+    if (_id) {
+      try {
+        query._id = new ObjectId(_id);
+      } catch (err) {
+        return res.status(400).send({ message: "Invalid _id format." });
+      }
+    }
     if (email) query.email = email;
 
-    // Execute the query
+    // ✅ Execute the query
     const result = await Tier_Upgrade_RefundCollection.find(query).toArray();
 
-    if (result.length === 1) {
-      res.status(200).send(result[0]); // Send the single object
-    } else if (result.length > 1) {
-      res.status(200).send(result); // Send array if multiple
-    } else {
-      res.status(404).send({
+    if (result.length === 0) {
+      return res.status(404).send({
         message: "No records found matching the query.",
-        query: query,
+        query,
       });
     }
+
+    // ✅ Always send an array for consistency
+    res.status(200).send(result);
   } catch (error) {
     console.error("Error searching Tier_Upgrade_Refund:", error);
     res.status(500).send("Something went wrong.");
