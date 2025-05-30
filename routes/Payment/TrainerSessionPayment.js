@@ -41,6 +41,10 @@ router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID format." });
+    }
+
     const result = await Trainer_Session_PaymentCollection.findOne({
       _id: new ObjectId(id),
     });

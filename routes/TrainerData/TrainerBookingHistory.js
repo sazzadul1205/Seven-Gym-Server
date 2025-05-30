@@ -160,18 +160,17 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Deleting all booking history
 router.delete("/DeleteAll", async (req, res) => {
   try {
-    // Deleting all booking history
     const result = await Trainer_Booking_HistoryCollection.deleteMany({});
 
-    if (result.deletedCount > 0) {
-      res.send({ message: "All booking history has been deleted." });
-    } else {
-      res.status(404).send("No booking history found.");
-    }
+    res.send({
+      message: "All Trainer Booking History Deleted Successfully.",
+      deletedCount: result.deletedCount,
+    });
   } catch (error) {
-    console.error("Error deleting booking history:", error);
+    console.error("Error deleting all Trainer Booking History:", error);
     res.status(500).send("Failed to delete booking history.");
   }
 });

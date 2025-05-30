@@ -209,13 +209,12 @@ router.delete("/DeleteAll", async (req, res) => {
   try {
     const result = await Trainer_Booking_RequestCollection.deleteMany({});
 
-    if (result.deletedCount > 0) {
-      res.send({ message: "All booking requests have been deleted." });
-    } else {
-      res.status(404).send("No booking requests found.");
-    }
+    res.send({
+      message: "All Trainer Booking Request Deleted Successfully.",
+      deletedCount: result.deletedCount,
+    });
   } catch (error) {
-    console.error("Error deleting booking requests:", error);
+    console.error("Error deleting all Trainer Booking Request:", error);
     res.status(500).send("Failed to delete booking requests.");
   }
 });

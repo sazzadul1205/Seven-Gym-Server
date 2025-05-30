@@ -65,7 +65,7 @@ router.delete("/DeleteAll", async (req, res) => {
     });
   } catch (error) {
     console.error(
-      "Error deleting all Trainer_Session_Refund documents:",
+      "Error deleting all Trainer Session Refund documents:",
       error
     );
     res.status(500).send("Something went wrong.");

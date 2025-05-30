@@ -534,8 +534,8 @@ router.put("/RemoveParticipant", async (req, res) => {
   }
 });
 
-// Reset all participants in Trainers_Schedule
-router.put("/ResetParticipants", async (req, res) => {
+// Delete all participants in Trainers_Schedule
+router.put("/DeleteAllParticipants", async (req, res) => {
   try {
     const trainers = await Trainers_ScheduleCollection.find().toArray();
 

@@ -225,14 +225,13 @@ router.delete("/DeleteAll", async (req, res) => {
   try {
     const result = await Trainer_Booking_AcceptedCollection.deleteMany({});
 
-    if (result.deletedCount === 0) {
-      return res.status(404).send("No bookings found to delete.");
-    }
-
-    res.status(200).send(`${result.deletedCount} booking(s) deleted.`);
+    res.send({
+      message: "All Trainer Booking Accepted Deleted Successfully.",
+      deletedCount: result.deletedCount,
+    });
   } catch (error) {
-    console.error("Error deleting Trainer_Booking_Accepted:", error);
-    res.status(500).send("Something went wrong.");
+    console.error("Error deleting all Trainer Booking Accepted:", error);
+    res.status(500).send("Failed to delete booking accepted.");
   }
 });
 
