@@ -77,6 +77,74 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// GET : Daily Refund Totals and Count
+router.get("/DailyTotals", async (req, res) => {
+  try {
+    const result = await Tier_Upgrade_RefundCollection.aggregate([
+      {
+        $addFields: {
+          paymentTime: {
+            $cond: [
+              { $eq: [{ $type: "$paymentTime" }, "string"] },
+              { $toDate: "$paymentTime" },
+              "$paymentTime",
+            ],
+          },
+          refundAmount: {
+            $cond: [
+              {
+                $in: [
+                  { $type: "$refundAmount" },
+                  ["string", "int", "double", "decimal"],
+                ],
+              },
+              {
+                $cond: [
+                  { $eq: [{ $type: "$refundAmount" }, "string"] },
+                  {
+                    $convert: {
+                      input: "$refundAmount",
+                      to: "double",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  "$refundAmount",
+                ],
+              },
+              null,
+            ],
+          },
+        },
+      },
+      {
+        $match: {
+          paymentTime: { $type: "date" },
+          refundAmount: { $ne: null },
+          refunded: true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$paymentTime" },
+          },
+          totalRefunded: { $sum: "$refundAmount" },
+          count: { $sum: 1 }, // Add this line to count refunds per day
+        },
+      },
+      {
+        $sort: { _id: -1 },
+      },
+    ]).toArray();
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error("Error calculating daily refund totals:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST Tier_Upgrade_Refund
 router.post("/", async (req, res) => {
   try {

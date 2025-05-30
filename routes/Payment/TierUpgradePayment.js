@@ -51,24 +51,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST Tier_Upgrade_Payment
-router.post("/", async (req, res) => {
-  try {
-    const paymentData = req.body;
-
-    // Insert data directly into the collection
-    const result = await Tier_Upgrade_PaymentCollection.insertOne(paymentData);
-
-    res.status(201).send({
-      message: "Payment record added successfully.",
-      paymentId: result.insertedId,
-    });
-  } catch (error) {
-    console.error("Error adding Tier_Upgrade_Payment:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
 // Query by paymentID, email, paymentMethod, or tier
 router.get("/search", async (req, res) => {
   try {
@@ -105,6 +87,96 @@ router.get("/search", async (req, res) => {
   } catch (error) {
     console.error("Error querying Tier_Upgrade_Payment:", error);
     return res.status(500).send("Something went wrong.");
+  }
+});
+
+// GET : Daily TotalPrice and Count
+router.get("/DailyTotals", async (req, res) => {
+  try {
+    const result = await Tier_Upgrade_PaymentCollection.aggregate([
+      {
+        $addFields: {
+          paymentTime: {
+            $cond: [
+              { $eq: [{ $type: "$paymentTime" }, "string"] },
+              { $toDate: "$paymentTime" },
+              "$paymentTime",
+            ],
+          },
+          totalPrice: {
+            $cond: [
+              {
+                $in: [
+                  { $type: "$totalPrice" },
+                  ["string", "int", "double", "decimal"],
+                ],
+              },
+              {
+                $cond: [
+                  { $eq: [{ $type: "$totalPrice" }, "string"] },
+                  {
+                    $convert: {
+                      input: "$totalPrice",
+                      to: "double",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  "$totalPrice",
+                ],
+              },
+              null,
+            ],
+          },
+        },
+      },
+      {
+        $match: {
+          paymentTime: { $type: "date" },
+          totalPrice: { $ne: null },
+        },
+      },
+      {
+        $addFields: {
+          paymentDate: {
+            $dateToString: { format: "%Y-%m-%d", date: "$paymentTime" },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$paymentDate",
+          totalRevenue: { $sum: "$totalPrice" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: -1 },
+      },
+    ]).toArray();
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error("Error calculating daily totals:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// POST Tier_Upgrade_Payment
+router.post("/", async (req, res) => {
+  try {
+    const paymentData = req.body;
+
+    // Insert data directly into the collection
+    const result = await Tier_Upgrade_PaymentCollection.insertOne(paymentData);
+
+    res.status(201).send({
+      message: "Payment record added successfully.",
+      paymentId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error adding Tier_Upgrade_Payment:", error);
+    res.status(500).send("Something went wrong.");
   }
 });
 
