@@ -66,7 +66,7 @@ router.get("/ByBooker", async (req, res) => {
 // Add or update StudentsHistory array by trainerId
 router.post("/", async (req, res) => {
   try {
-    const { trainerId, studentEntry } = req.body;
+    const { trainerId, studentEntry, trainer } = req.body; // trainer is a string here
 
     if (!trainerId || !studentEntry || !studentEntry.bookerEmail) {
       return res
@@ -74,30 +74,52 @@ router.post("/", async (req, res) => {
         .send("trainerId, studentEntry, and bookerEmail are required.");
     }
 
-    // Check if student with the given email already exists in the StudentsHistory array
+    const trainerIdString = String(trainerId);
+
+    if (!ObjectId.isValid(trainerIdString)) {
+      return res.status(400).send("Invalid trainerId format.");
+    }
+
+    const trainerObjectId = new ObjectId(trainerIdString);
+
+    // Try to update student ActiveTime if email exists in StudentsHistory
     const result = await Trainer_Student_HistoryCollection.updateOne(
       {
-        trainerId: trainerId,
-        "StudentsHistory.bookerEmail": studentEntry.bookerEmail, // Check if email exists
+        trainerId: trainerObjectId,
+        "StudentsHistory.bookerEmail": studentEntry.bookerEmail,
       },
       {
         $set: {
-          "StudentsHistory.$.ActiveTime": studentEntry.ActiveTime, // Update ActiveTime
+          "StudentsHistory.$.ActiveTime": studentEntry.ActiveTime,
         },
       }
     );
 
     if (result.matchedCount === 0) {
-      // If no matching email was found, add the new entry
+      // If no student entry updated, try to push studentEntry to StudentsHistory
       const addResult = await Trainer_Student_HistoryCollection.updateOne(
-        { trainerId: trainerId },
+        { trainerId: trainerObjectId },
         { $push: { StudentsHistory: studentEntry } }
       );
 
       if (addResult.modifiedCount === 0) {
-        return res
-          .status(400)
-          .send("Trainer found but student entry was not added.");
+        // Trainer document does not exist, so create a new one with the specified format
+        const insertResult = await Trainer_Student_HistoryCollection.insertOne({
+          trainerId: trainerObjectId,
+          name: trainer ?? null, // <-- Use the string trainer or null if undefined
+          StudentsHistory: [studentEntry],
+        });
+
+        if (!insertResult.acknowledged) {
+          return res
+            .status(500)
+            .send("Failed to create new trainer history document.");
+        }
+
+        return res.send({
+          message:
+            "Trainer history document created and student history added.",
+        });
       }
 
       return res.send({ message: "Student history added successfully." });
