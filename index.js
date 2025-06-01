@@ -151,7 +151,6 @@ app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
 app.use("/BookingSessionExpire", BookingSessionExpire);
 app.use("/CleanupTrainerSessions", CleanupTrainerSessions);
 app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
-app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 
 // Admin Firebase Delete User
 app.use("/AdminAdminDeleteUser", AdminDeleteUser);
