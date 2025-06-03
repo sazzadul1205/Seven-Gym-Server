@@ -36,7 +36,80 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get Trainer_Session_Payment by ID
+// GET: Daily Stats - Aggregate payments by day with optional filters
+router.get("/DailyStats", async (req, res) => {
+  try {
+    const { bookerEmail, trainerId } = req.query;
+
+    // Base match: only paid sessions
+    const matchStage = { "BookingInfo.paid": true };
+
+    // Add optional filters if provided
+    if (bookerEmail) {
+      matchStage["BookingInfo.bookerEmail"] = bookerEmail;
+    }
+    if (trainerId) {
+      matchStage["BookingInfo.trainerId"] = trainerId;
+    }
+
+    const result = await Trainer_Session_PaymentCollection.aggregate([
+      { $match: matchStage },
+
+      {
+        $project: {
+          date: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: { $toDate: "$paymentTime" },
+              timezone: "UTC", // adjust if needed
+            },
+          },
+          total: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$BookingInfo.totalPrice", "free"] },
+                  { $eq: ["$BookingInfo.totalPrice", "0"] },
+                  { $eq: ["$BookingInfo.totalPrice", "0.00"] },
+                  { $eq: ["$BookingInfo.totalPrice", 0] },
+                  { $not: ["$BookingInfo.totalPrice"] },
+                ],
+              },
+              then: 0,
+              else: { $toDouble: "$BookingInfo.totalPrice" },
+            },
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$date",
+          totalPaid: { $sum: "$total" },
+          count: { $sum: 1 },
+        },
+      },
+
+      { $sort: { _id: -1 } },
+
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          totalPaid: 1,
+          count: 1,
+        },
+      },
+    ]).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching daily stats:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// GET: Trainer_Session_Payment by ID
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;

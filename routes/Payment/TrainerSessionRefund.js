@@ -35,6 +35,85 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET: Daily Stats - Aggregate all refunds (including free) by refundTime
+router.get("/DailyStats", async (req, res) => {
+  try {
+    const { bookerEmail, trainerId } = req.query;
+    const matchStage = {
+      refundTime: { $exists: true, $ne: null },
+    };
+
+    // Dynamically add filters if provided
+    if (bookerEmail) {
+      matchStage["bookingDataForHistory.bookerEmail"] = bookerEmail;
+    }
+
+    if (trainerId) {
+      matchStage["bookingDataForHistory.trainerId"] = trainerId;
+    }
+
+    const result = await Trainer_Session_RefundCollection.aggregate([
+      // Match with dynamic filters
+      { $match: matchStage },
+
+      // Normalize refund amount and extract date
+      {
+        $project: {
+          date: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: { $toDate: "$refundTime" },
+              timezone: "UTC",
+            },
+          },
+          refundAmount: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$PaymentRefund.refundAmount", "free"] },
+                  { $eq: ["$PaymentRefund.refundAmount", 0] },
+                  { $eq: ["$PaymentRefund.refundAmount", "0.00"] },
+                  { $eq: ["$PaymentRefund.refundAmount", "0"] },
+                  { $not: ["$PaymentRefund.refundAmount"] },
+                ],
+              },
+              then: 0,
+              else: { $toDouble: "$PaymentRefund.refundAmount" },
+            },
+          },
+        },
+      },
+
+      // Group by date
+      {
+        $group: {
+          _id: "$date",
+          totalRefunded: { $sum: "$refundAmount" },
+          count: { $sum: 1 },
+        },
+      },
+
+      // Sort by most recent
+      { $sort: { _id: -1 } },
+
+      // Final output
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          totalRefunded: 1,
+          count: 1,
+        },
+      },
+    ]).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching refund stats:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST Trainer_Session_Refund
 router.post("/", async (req, res) => {
   try {

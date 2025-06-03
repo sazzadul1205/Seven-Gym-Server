@@ -41,20 +41,21 @@ const UserSchedule = require("./routes/UserSchedule/UserSchedule");
 // Payment Data
 const TierUpgradeRefund = require("./routes/Payment/TierUpgradeRefund");
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
-const TrainerSessionPayment = require("./routes/Payment/TrainerSessionPayment");
 const TrainerSessionRefund = require("./routes/Payment/TrainerSessionRefund");
+const TrainerSessionPayment = require("./routes/Payment/TrainerSessionPayment");
+const TrainerSessionCompletedActive = require("./routes/Payment/TrainerSessionCompleted&Active");
 
 // Payment Intent
 const StripeRefundIntent = require("./routes/Payment/StripeRefundIntent");
 const StripePaymentIntent = require("./routes/Payment/StripePaymentIntent");
 
 // Automatic
+const AutoUnBan = require("./routes/Automatic/AutoUnBan");
 const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
 const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
 const CleanupTrainerSessions = require("./routes/Automatic/CleanupTrainerSessions");
 const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpiredTrainerBookings");
-const AutoUnBan = require("./routes/Automatic/AutoUnBan");
 
 // Admin Firebase Delete User
 const AdminDeleteUser = require("./routes/FireBase/FirebaseDeleteUser/FirebaseDeleteUser");
@@ -139,6 +140,7 @@ app.use("/Tier_Upgrade_Refund", TierUpgradeRefund);
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
 app.use("/Trainer_Session_Refund", TrainerSessionRefund);
 app.use("/Trainer_Session_Payment", TrainerSessionPayment);
+app.use("/Trainer_Session_Completed_&_Active", TrainerSessionCompletedActive);
 
 // Payment Intent
 app.use("/Stripe_Refund_Intent", StripeRefundIntent);
