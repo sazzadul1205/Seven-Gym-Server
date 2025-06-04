@@ -125,6 +125,32 @@ router.get("/Trainer/:trainerId", async (req, res) => {
   }
 });
 
+// GET : get all the booking that are Completed
+router.get("/Completed", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_HistoryCollection.find({
+      status: "Ended",
+    }).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching completed bookings:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// GET: get all the booking that are Cancelled
+router.get("/Cancelled", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_HistoryCollection.find({
+      status: { $ne: "Ended" },
+    }).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching cancelled bookings:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Post request to create a new booking request
 router.post("/", async (req, res) => {
   try {
