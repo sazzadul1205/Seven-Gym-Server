@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get user's name and profile image by email
+// Get : user's name, profile image, email, gender, DOB, and tier by email
 router.get("/BasicProfile", async (req, res) => {
   try {
     const email = req.query.email;
@@ -44,7 +44,10 @@ router.get("/BasicProfile", async (req, res) => {
           fullName: 1,
           profileImage: 1,
           email: 1,
-          _id: 0, // Optional: exclude _id if not needed
+          gender: 1,
+          dob: 1,
+          tier: 1,
+          _id: 0, // Exclude MongoDB _id
         },
       }
     );

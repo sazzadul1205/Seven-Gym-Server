@@ -102,36 +102,40 @@ router.get("/BasicInfo", async (req, res) => {
   try {
     const { id } = req.query;
 
-    // If _id is provided, return the specific trainer's basic information
-    if (id) {
-      if (!ObjectId.isValid(id)) {
-        return res.status(400).json({ error: "Invalid trainer ID format." });
-      }
-
-      const trainer = await TrainersCollection.findOne(
-        { _id: new ObjectId(id) },
-        {
-          projection: {
-            _id: 1,
-            name: 1,
-            specialization: 1,
-            imageUrl: 1,
-            tier: 1,
-            gender: 1,
-            age: 1,
-            experience: 1,
-          },
-        }
-      );
-
-      if (!trainer) {
-        return res.status(404).json({ error: "Trainer not found." });
-      }
-
-      return res.json(trainer);
-    } else {
+    if (!id) {
       return res.status(400).json({ error: "Trainer ID is required." });
     }
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid trainer ID format." });
+    }
+
+    const trainer = await TrainersCollection.findOne(
+      { _id: new ObjectId(id) },
+      {
+        projection: {
+          _id: 1,
+          name: 1,
+          specialization: 1,
+          imageUrl: 1,
+          tier: 1,
+          gender: 1,
+          age: 1,
+          experience: 1,
+        },
+      }
+    );
+
+    if (!trainer) {
+      return res.status(404).json({ error: "Trainer not found." });
+    }
+
+    // Ensure tier is set to "None" if missing
+    if (!trainer.tier) {
+      trainer.tier = "None";
+    }
+
+    return res.json(trainer);
   } catch (error) {
     console.error("Error fetching trainer basic info:", error.message);
     res.status(500).json({
