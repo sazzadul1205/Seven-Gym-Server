@@ -129,7 +129,6 @@ router.get("/DailyStats", async (req, res) => {
   }
 });
 
-// Daily summary route
 // Get: Daily Status of Accepted Trainer Bookings
 router.get("/DailyStatus", async (req, res) => {
   try {
