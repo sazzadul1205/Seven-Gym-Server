@@ -138,6 +138,77 @@ router.get("/Completed", async (req, res) => {
   }
 });
 
+// GET : Daily summary of completed bookings (based on endDate)
+router.get("/Completed/DailyStatus", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_HistoryCollection.aggregate([
+      {
+        $match: {
+          status: "Ended",
+          startAt: { $ne: null },
+          durationWeeks: { $gt: 0 },
+        },
+      },
+      {
+        $addFields: {
+          // Convert startAt to Date
+          startDate: { $toDate: "$startAt" },
+        },
+      },
+      {
+        $addFields: {
+          // Calculate endDate = startAt + (durationWeeks * 7 days)
+          endDate: {
+            $dateAdd: {
+              startDate: "$startDate",
+              unit: "day",
+              amount: { $multiply: ["$durationWeeks", 7] },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          // Format endDate as "dd-mm-yyyy"
+          formattedEndDate: {
+            $dateToString: {
+              format: "%d-%m-%Y",
+              date: "$endDate",
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$formattedEndDate",
+          totalPrice: { $sum: { $toDouble: "$totalPrice" } },
+          sessions: { $sum: { $size: "$sessions" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          endDate: "$_id",
+          totalPrice: 1,
+          sessions: 1,
+          count: 1,
+        },
+      },
+      {
+        $sort: {
+          endDate: 1,
+        },
+      },
+    ]).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error generating completed booking summary:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // GET: get all the booking that are Cancelled
 router.get("/Cancelled", async (req, res) => {
   try {
@@ -147,6 +218,64 @@ router.get("/Cancelled", async (req, res) => {
     res.send(result);
   } catch (error) {
     console.error("Error fetching cancelled bookings:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// GET: Daily summary of cancelled bookings (based on droppedAt)
+router.get("/Cancelled/DailyStatus", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_HistoryCollection.aggregate([
+      {
+        $match: {
+          status: { $ne: "Ended" },
+          droppedAt: { $ne: null },
+        },
+      },
+      {
+        $addFields: {
+          droppedDate: {
+            $dateToString: {
+              format: "%d-%m-%Y",
+              date: {
+                $toDate: {
+                  $dateFromString: {
+                    dateString: "$droppedAt",
+                    format: "%d-%m-%Y %H:%M:%S",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$droppedDate",
+          refundedAmount: { $sum: { $toDouble: "$RefundAmount" } },
+          sessions: { $sum: { $size: "$sessions" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          droppedDate: "$_id",
+          refundedAmount: 1,
+          sessions: 1,
+          count: 1,
+        },
+      },
+      {
+        $sort: {
+          droppedDate: 1,
+        },
+      },
+    ]).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching cancelled bookings summary:", error);
     res.status(500).send("Something went wrong.");
   }
 });

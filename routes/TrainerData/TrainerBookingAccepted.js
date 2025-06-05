@@ -129,6 +129,60 @@ router.get("/DailyStats", async (req, res) => {
   }
 });
 
+// Daily summary route
+// Get: Daily Status of Accepted Trainer Bookings
+router.get("/DailyStatus", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_AcceptedCollection.aggregate([
+      {
+        $addFields: {
+          // Normalize acceptedAt to "dd-mm-yyyy"
+          acceptedDate: {
+            $dateToString: {
+              format: "%d-%m-%Y",
+              date: { $toDate: "$acceptedAt" },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          acceptedAt: { $ne: null },
+          sessions: { $type: "array", $ne: [] },
+          totalPrice: { $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: "$acceptedDate",
+          totalPrice: { $sum: { $toDouble: "$totalPrice" } },
+          sessions: { $sum: { $size: "$sessions" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          acceptedDate: "$_id",
+          totalPrice: 1,
+          sessions: 1,
+          count: 1,
+        },
+      },
+      {
+        $sort: {
+          acceptedDate: 1, // ascending order by date
+        },
+      },
+    ]).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error generating daily accepted booking status:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST Trainer_Booking_Accepted
 router.post("/", async (req, res) => {
   try {

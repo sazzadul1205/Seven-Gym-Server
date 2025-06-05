@@ -10,31 +10,30 @@ const Trainer_Booking_RequestCollection = client
 
 // Get Trainers_Booking_Request
 router.get("/", async (req, res) => {
+  const { id } = req.query;
+
   try {
+    if (id) {
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send("Invalid ID format.");
+      }
+
+      const result = await Trainer_Booking_RequestCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!result) {
+        return res.status(404).send("Booking request not found.");
+      }
+
+      return res.send(result);
+    }
+
+    // No ID provided — return all
     const result = await Trainer_Booking_RequestCollection.find().toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Trainers_Booking_Request:", error);
-    res.status(500).send("Something went wrong.");
-  }
-});
-
-// Get a specific Trainers_Booking_Request by ID
-router.get("/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await Trainer_Booking_RequestCollection.findOne({
-      _id: new ObjectId(id),
-    });
-
-    if (!result) {
-      return res.status(404).send("Booking request not found.");
-    }
-
-    res.send(result);
-  } catch (error) {
-    console.error("Error fetching booking request by ID:", error);
     res.status(500).send("Something went wrong.");
   }
 });
@@ -73,6 +72,48 @@ router.get("/Trainer/:trainerName", async (req, res) => {
   } catch (error) {
     console.error("Error fetching trainer bookings:", error);
     res.status(500).send("Internal Server Error");
+  }
+});
+
+// Get : Daily Status of Trainer Booking Requests
+router.get("/DailyStatus", async (req, res) => {
+  try {
+    const result = await Trainer_Booking_RequestCollection.aggregate([
+      {
+        $addFields: {
+          // Normalize date to only dd-mm-yyyy format
+          bookingDate: {
+            $dateToString: {
+              format: "%d-%m-%Y",
+              date: { $toDate: "$bookedAt" },
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$bookingDate",
+          totalPrice: { $sum: { $toDouble: "$totalPrice" } },
+          sessions: { $sum: { $size: "$sessions" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          totalPrice: 1,
+          sessions: 1,
+          count: 1,
+        },
+      },
+      { $sort: { date: 1 } }, // Optional: sort by date ascending
+    ]).toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching daily booking status:", error);
+    res.status(500).send("Something went wrong.");
   }
 });
 

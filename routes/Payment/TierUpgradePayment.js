@@ -91,7 +91,7 @@ router.get("/search", async (req, res) => {
 });
 
 // GET : Daily TotalPrice and Count
-router.get("/DailyTotals", async (req, res) => {
+router.get("/DailyStatus", async (req, res) => {
   try {
     const result = await Tier_Upgrade_PaymentCollection.aggregate([
       {
