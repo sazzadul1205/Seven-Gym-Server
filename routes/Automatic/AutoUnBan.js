@@ -8,13 +8,10 @@ const TrainersCollection = client.db("Seven-Gym").collection("Trainers");
 
 console.log("🔁 Auto-UnBan Cron Job Initialized");
 
-// Utility: Format date to 'Mon May 26 2025'
-const formatDate = (d) => new Date(d).toDateString();
-
 // 🔧 Core logic to unBan expired users/trainers
 const AutoUnBanHandler = async () => {
   try {
-    const today = formatDate(new Date());
+    const now = new Date();
 
     const collections = [
       { name: "Users", collection: UsersCollection },
@@ -37,7 +34,10 @@ const AutoUnBanHandler = async () => {
           return false;
         }
 
-        return formatDate(doc.ban.End) === today;
+        const banEndDate = new Date(doc.ban.End);
+
+        // UnBan if ban end date is before or equal to now (expired)
+        return banEndDate <= now;
       });
 
       if (toUnBan.length === 0) {
@@ -46,12 +46,15 @@ const AutoUnBanHandler = async () => {
       }
 
       const ids = toUnBan.map((doc) => doc._id);
+
+      console.log(`⏳ Unbanning ${ids.length} from ${name}:`, ids);
+
       await collection.updateMany(
         { _id: { $in: ids } },
         { $unset: { ban: "" } }
       );
 
-      console.log(`✅ Unbanned ${ids.length} from ${name}:`, ids);
+      console.log(`✅ Unbanned ${ids.length} from ${name}.`);
     }
   } catch (err) {
     console.error("❌ Error in auto-unBan task:", err.message);

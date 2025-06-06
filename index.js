@@ -60,6 +60,9 @@ const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpired
 // Admin Firebase Delete User
 const AdminDeleteUser = require("./routes/FireBase/FirebaseDeleteUser/FirebaseDeleteUser");
 
+// Single Use
+const syncTrainerIds = require("./routes/SingleUse/syncTrainerIds");
+
 require("dotenv").config();
 const app = express();
 
@@ -156,6 +159,9 @@ app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 
 // Admin Firebase Delete User
 app.use("/AdminAdminDeleteUser", AdminDeleteUser);
+
+// SingleUse
+app.use("/syncTrainerIds", syncTrainerIds);
 
 // Root health-check
 app.get("/", (req, res) => {
