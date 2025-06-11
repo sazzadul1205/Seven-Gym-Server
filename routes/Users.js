@@ -1,4 +1,3 @@
-// Import required modules
 const express = require("express");
 const router = express.Router();
 const { client } = require("../config/db");
@@ -28,37 +27,36 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get : user's name, profile image, email, gender, DOB, and tier by email
+// Get: user's name, profile image, email, gender, DOB, and tier
 router.get("/BasicProfile", async (req, res) => {
   try {
     const email = req.query.email;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email query is required." });
-    }
+    const projection = {
+      profileImage: 1,
+      fullName: 1,
+      gender: 1,
+      email: 1,
+      role: 1,
+      tier: 1,
+      dob: 1,
+      _id: 1,
+    };
 
-    const user = await UsersCollection.findOne(
-      { email },
-      {
-        projection: {
-          fullName: 1,
-          profileImage: 1,
-          email: 1,
-          gender: 1,
-          dob: 1,
-          tier: 1,
-          _id: 0, // Exclude MongoDB _id
-        },
+    if (email) {
+      const user = await UsersCollection.findOne({ email }, { projection });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
       }
-    );
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(200).json(user);
+    } else {
+      const users = await UsersCollection.find({}, { projection }).toArray();
+      return res.status(200).json(users);
     }
-
-    return res.status(200).json(user);
   } catch (error) {
-    console.error("Error fetching basic profile:", error);
+    console.error("Error fetching basic profile(s):", error);
     res.status(500).json({ message: "Internal server error." });
   }
 });

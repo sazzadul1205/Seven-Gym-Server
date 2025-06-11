@@ -97,45 +97,55 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get Trainer Basic Info by _id
+// Get Trainer Basic Info by _id or fetch all if no id provided
 router.get("/BasicInfo", async (req, res) => {
   try {
     const { id } = req.query;
 
-    if (!id) {
-      return res.status(400).json({ error: "Trainer ID is required." });
-    }
+    const projection = {
+      _id: 1,
+      name: 1,
+      specialization: 1,
+      imageUrl: 1,
+      tier: 1,
+      gender: 1,
+      age: 1,
+      experience: 1,
+    };
 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid trainer ID format." });
-    }
-
-    const trainer = await TrainersCollection.findOne(
-      { _id: new ObjectId(id) },
-      {
-        projection: {
-          _id: 1,
-          name: 1,
-          specialization: 1,
-          imageUrl: 1,
-          tier: 1,
-          gender: 1,
-          age: 1,
-          experience: 1,
-        },
+    if (id) {
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid trainer ID format." });
       }
-    );
 
-    if (!trainer) {
-      return res.status(404).json({ error: "Trainer not found." });
+      const trainer = await TrainersCollection.findOne(
+        { _id: new ObjectId(id) },
+        { projection }
+      );
+
+      if (!trainer) {
+        return res.status(404).json({ error: "Trainer not found." });
+      }
+
+      if (!trainer.tier) {
+        trainer.tier = "None";
+      }
+
+      return res.json(trainer);
+    } else {
+      const trainers = await TrainersCollection.find(
+        {},
+        { projection }
+      ).toArray();
+
+      // Ensure every trainer has a tier (fallback to "None")
+      const result = trainers.map((trainer) => ({
+        ...trainer,
+        tier: trainer.tier || "None",
+      }));
+
+      return res.json(result);
     }
-
-    // Ensure tier is set to "None" if missing
-    if (!trainer.tier) {
-      trainer.tier = "None";
-    }
-
-    return res.json(trainer);
   } catch (error) {
     console.error("Error fetching trainer basic info:", error.message);
     res.status(500).json({

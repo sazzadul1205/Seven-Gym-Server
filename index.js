@@ -22,6 +22,7 @@ const GymFeatures = require("./routes/GymFeatures");
 const HomeServices = require("./routes/HomeServices");
 const ClassDetails = require("./routes/ClassDetails");
 const Testimonials = require("./routes/Testimonials");
+const CommunityPosts = require("./routes/CommunityPosts");
 const OurClassesSchedule = require("./routes/OurClassesSchedule");
 const ClassBookingRequest = require("./routes/ClassBookingRequest");
 
@@ -119,6 +120,7 @@ app.use("/Gym_Features", GymFeatures);
 app.use("/Our_Missions", OurMissions);
 app.use("/Testimonials", Testimonials);
 app.use("/Class_Details", ClassDetails);
+app.use("/CommunityPosts", CommunityPosts);
 app.use("/Home_Banner_Section", HomeBanner);
 app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
