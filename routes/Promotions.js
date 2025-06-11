@@ -38,6 +38,28 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT : Update Promotion by ID
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+
+  try {
+    const result = await PromotionsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).send("Promotion not found.");
+    }
+
+    res.status(200).send("Promotion updated successfully.");
+  } catch (error) {
+    console.error("Error updating promotion:", error);
+    res.status(500).send("Something went wrong while updating the promotion.");
+  }
+});
+
 // Toggle Promotion show status
 router.patch("/ToggleShow/:id", async (req, res) => {
   try {
