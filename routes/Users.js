@@ -30,7 +30,7 @@ router.get("/", async (req, res) => {
 // Get: user's name, profile image, email, gender, DOB, and tier
 router.get("/BasicProfile", async (req, res) => {
   try {
-    const email = req.query.email;
+    const { email } = req.query;
 
     const projection = {
       profileImage: 1,
@@ -50,11 +50,11 @@ router.get("/BasicProfile", async (req, res) => {
         return res.status(404).json({ message: "User not found." });
       }
 
-      return res.status(200).json(user);
-    } else {
-      const users = await UsersCollection.find({}, { projection }).toArray();
-      return res.status(200).json(users);
+      return res.status(200).json(user); // Single object
     }
+
+    const users = await UsersCollection.find({}, { projection }).toArray();
+    return res.status(200).json(users); // Array
   } catch (error) {
     console.error("Error fetching basic profile(s):", error);
     res.status(500).json({ message: "Internal server error." });

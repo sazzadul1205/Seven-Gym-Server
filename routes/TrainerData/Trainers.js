@@ -6,17 +6,15 @@ const router = express.Router();
 // Collection for Trainers
 const TrainersCollection = client.db("Seven-Gym").collection("Trainers");
 
-// Get Trainers with filtering options
+// GET : Get All Trainers or a Single Trainer
 router.get("/", async (req, res) => {
   try {
     const {
-      id, // 👈 Added for _id filtering
+      id, // For _id filtering
       name,
       tier,
       email,
       gender,
-      feeMin,
-      feeMax,
       classType,
       focusArea,
       experienceMin,
@@ -27,7 +25,7 @@ router.get("/", async (req, res) => {
 
     const query = {};
 
-    // 🔍 If only _id is given, return that specific trainer
+    // If only _id is given, return that specific trainer
     if (id) {
       if (!ObjectId.isValid(id)) {
         return res.status(400).json({ error: "Invalid trainer ID format." });
@@ -41,10 +39,10 @@ router.get("/", async (req, res) => {
         return res.status(404).json({ error: "Trainer not found." });
       }
 
-      return res.json(trainer);
+      return res.json(trainer); // ✅ Return single object
     }
 
-    // 🧠 Apply other filters only if not fetching by ID
+    // Build filters
     if (name) {
       query.name = { $regex: new RegExp(name, "i") };
     }
@@ -66,12 +64,7 @@ router.get("/", async (req, res) => {
         ...(experienceMax && { $lte: parseInt(experienceMax, 10) }),
       };
     }
-    if (feeMin || feeMax) {
-      query.fee = {
-        ...(feeMin && { $gte: parseFloat(feeMin) }),
-        ...(feeMax && { $lte: parseFloat(feeMax) }),
-      };
-    }
+
     if (languagesSpoken) {
       query.languagesSpoken = { $in: languagesSpoken.split(",") };
     }
@@ -82,13 +75,21 @@ router.get("/", async (req, res) => {
       query["preferences.focusAreas"] = { $in: focusArea.split(",") };
     }
 
-    const result = await TrainersCollection.find(query).toArray();
-
+    // Handle case with no filters (return all)
     if (!Object.keys(query).length) {
-      return res.send(await TrainersCollection.find().toArray());
+      const all = await TrainersCollection.find().toArray();
+      return res.json(all); // Array
     }
 
-    res.send(result);
+    const result = await TrainersCollection.find(query).toArray();
+
+    // Return single object if exactly one match
+    if (result.length === 1) {
+      return res.json(result[0]); // Object
+    }
+
+    // Return array for multiple or zero matches
+    res.json(result);
   } catch (error) {
     console.error("Error fetching trainers:", error.message);
     res
@@ -100,7 +101,7 @@ router.get("/", async (req, res) => {
 // Get Trainer Basic Info by _id or fetch all if no id provided
 router.get("/BasicInfo", async (req, res) => {
   try {
-    const { id } = req.query;
+    const { id, email } = req.query;
 
     const projection = {
       _id: 1,
@@ -111,8 +112,10 @@ router.get("/BasicInfo", async (req, res) => {
       gender: 1,
       age: 1,
       experience: 1,
+      email: 1, // included for email-based querying
     };
 
+    // 📌 Query by ID
     if (id) {
       if (!ObjectId.isValid(id)) {
         return res.status(400).json({ error: "Invalid trainer ID format." });
@@ -127,25 +130,39 @@ router.get("/BasicInfo", async (req, res) => {
         return res.status(404).json({ error: "Trainer not found." });
       }
 
-      if (!trainer.tier) {
-        trainer.tier = "None";
+      trainer.tier = trainer.tier || "None";
+
+      return res.json(trainer); // Return single object
+    }
+
+    // 📌 Query by Email
+    if (email) {
+      const trainer = await TrainersCollection.findOne(
+        { email },
+        { projection }
+      );
+
+      if (!trainer) {
+        return res.status(404).json({ error: "Trainer not found." });
       }
 
-      return res.json(trainer);
-    } else {
-      const trainers = await TrainersCollection.find(
-        {},
-        { projection }
-      ).toArray();
+      trainer.tier = trainer.tier || "None";
 
-      // Ensure every trainer has a tier (fallback to "None")
-      const result = trainers.map((trainer) => ({
-        ...trainer,
-        tier: trainer.tier || "None",
-      }));
-
-      return res.json(result);
+      return res.json(trainer); // Return single object
     }
+
+    // 📌 Return all if no filter
+    const trainers = await TrainersCollection.find(
+      {},
+      { projection }
+    ).toArray();
+
+    const result = trainers.map((trainer) => ({
+      ...trainer,
+      tier: trainer.tier || "None",
+    }));
+
+    return res.json(result); // Return array
   } catch (error) {
     console.error("Error fetching trainer basic info:", error.message);
     res.status(500).json({
