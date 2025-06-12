@@ -101,6 +101,32 @@ router.patch("/Post/Dislike/:postId", async (req, res) => {
   }
 });
 
+// POST: Add a comment to a community post
+router.post("/Post/Comment/:postId", async (req, res) => {
+  const { postId } = req.params;
+  const comment = req.body;
+
+  if (!postId || !comment?.user || !comment?.content) {
+    return res.status(400).json({ message: "Missing required comment data." });
+  }
+
+  try {
+    const result = await CommunityPostsCollection.updateOne(
+      { _id: new ObjectId(postId) },
+      { $push: { comments: comment } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "Comment added successfully." });
+    } else {
+      res.status(404).json({ message: "Post not found or no change made." });
+    }
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    res.status(500).json({ message: "Failed to add comment." });
+  }
+});
+
 // DELETE a post by ID
 router.delete("/:id", async (req, res) => {
   try {
