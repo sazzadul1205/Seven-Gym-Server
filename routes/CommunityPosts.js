@@ -8,7 +8,7 @@ const CommunityPostsCollection = client
   .db("Seven-Gym")
   .collection("CommunityPosts");
 
-// GET all community posts
+// GET : All Community posts
 router.get("/", async (req, res) => {
   try {
     const posts = await CommunityPostsCollection.find().toArray();
@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST a new community post
+// POST: Add a new Community post
 router.post("/", async (req, res) => {
   try {
     const newPost = req.body;
@@ -31,47 +31,73 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PATCH like or dislike a post
-router.patch("/react/:id", async (req, res) => {
-  const { type, email } = req.body; // type: 'like' or 'dislike'
-  const postId = req.params.id;
-
-  if (!email || !["like", "dislike"].includes(type)) {
-    return res.status(400).json({ message: "Invalid data" });
-  }
+// PATCH : Toggle Like
+router.patch("/Post/Like/:postId", async (req, res) => {
+  const { postId } = req.params;
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email required" });
 
   try {
     const post = await CommunityPostsCollection.findOne({
       _id: new ObjectId(postId),
     });
-
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const oppositeField = type === "like" ? "disliked" : "liked";
-    const currentField = type === "like" ? "liked" : "disliked";
+    const likedSet = new Set(post.liked || []);
 
-    const update = {};
-
-    // Remove email from opposite field if it exists
-    if (post[oppositeField]?.includes(email)) {
-      update.$pull = { [oppositeField]: email };
+    if (likedSet.has(email)) {
+      likedSet.delete(email);
+    } else {
+      likedSet.add(email);
     }
 
-    // Add email to current field if it doesn't exist
-    if (!post[currentField]?.includes(email)) {
-      if (!update.$addToSet) update.$addToSet = {};
-      update.$addToSet[currentField] = email;
-    }
-
-    const result = await CommunityPostsCollection.updateOne(
+    await CommunityPostsCollection.updateOne(
       { _id: new ObjectId(postId) },
-      update
+      { $set: { liked: Array.from(likedSet) } }
     );
 
-    res.status(200).json({ message: "Reaction updated", result });
+    const updatedPost = await CommunityPostsCollection.findOne({
+      _id: new ObjectId(postId),
+    });
+    res.status(200).json({ message: "Like toggled", post: updatedPost });
   } catch (error) {
-    console.error("Error updating reaction:", error);
-    res.status(500).json({ message: "Failed to update reaction" });
+    console.error("Error toggling like:", error);
+    res.status(500).json({ message: "Failed to toggle like" });
+  }
+});
+
+// PATCH : Toggle Dislike
+router.patch("/Post/Dislike/:postId", async (req, res) => {
+  const { postId } = req.params;
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email required" });
+
+  try {
+    const post = await CommunityPostsCollection.findOne({
+      _id: new ObjectId(postId),
+    });
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const dislikedSet = new Set(post.disliked || []);
+
+    if (dislikedSet.has(email)) {
+      dislikedSet.delete(email);
+    } else {
+      dislikedSet.add(email);
+    }
+
+    await CommunityPostsCollection.updateOne(
+      { _id: new ObjectId(postId) },
+      { $set: { disliked: Array.from(dislikedSet) } }
+    );
+
+    const updatedPost = await CommunityPostsCollection.findOne({
+      _id: new ObjectId(postId),
+    });
+    res.status(200).json({ message: "Dislike toggled", post: updatedPost });
+  } catch (error) {
+    console.error("Error toggling dislike:", error);
+    res.status(500).json({ message: "Failed to toggle dislike" });
   }
 });
 
