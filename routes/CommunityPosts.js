@@ -146,4 +146,32 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// DELETE: Remove a comment from a post by _id and user email
+router.delete("/Post/Comments/:id", async (req, res) => {
+  const { id } = req.params;
+  const { email } = req.body;
+
+  try {
+    const result = await CommunityPostsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $pull: {
+          comments: { email: email },
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "Comment not found or already deleted" });
+    }
+
+    res.status(200).json({ message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ message: "Failed to delete comment" });
+  }
+});
+
 module.exports = router;
