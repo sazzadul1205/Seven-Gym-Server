@@ -101,6 +101,39 @@ router.patch("/Post/Dislike/:postId", async (req, res) => {
   }
 });
 
+// PATCH: Update a specific post by ID
+router.patch("/:id", async (req, res) => {
+  const postId = req.params.id;
+  const updatedData = req.body;
+
+  if (!ObjectId.isValid(postId)) {
+    return res.status(400).json({ message: "Invalid post ID" });
+  }
+
+  try {
+    const filter = { _id: new ObjectId(postId) };
+    const updateDoc = {
+      $set: {
+        postTitle: updatedData.postTitle,
+        postContent: updatedData.postContent,
+        tags: updatedData.tags || [],
+        updatedAt: new Date().toISOString(), // Optional: Add timestamp
+      },
+    };
+
+    const result = await CommunityPostsCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.status(200).json({ message: "Post updated successfully" });
+  } catch (error) {
+    console.error("Error updating post:", error);
+    res.status(500).json({ message: "Failed to update community post" });
+  }
+});
+
 // POST: Add a comment to a community post
 router.post("/Post/Comment/:postId", async (req, res) => {
   const { postId } = req.params;
