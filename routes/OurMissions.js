@@ -11,13 +11,64 @@ const Our_MissionsCollection = client
 // Get Our_Missions (as single object)
 router.get("/", async (req, res) => {
   try {
-    const result = await Our_MissionsCollection.findOne(); 
+    const result = await Our_MissionsCollection.findOne();
     if (!result) {
       return res.status(404).send("No mission found.");
     }
     res.send(result);
   } catch (error) {
     console.error("Error fetching Our_Missions:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Add new core value
+router.patch("/AddCoreValue", async (req, res) => {
+  try {
+    const newCoreValue = req.body;
+
+    if (
+      !newCoreValue?.title ||
+      !newCoreValue?.description ||
+      !newCoreValue?.img
+    ) {
+      return res.status(400).send("Missing title, description, or image.");
+    }
+
+    // Attach custom ID (optional but recommended)
+    newCoreValue.id = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+    const updated = await Our_MissionsCollection.findOneAndUpdate(
+      {},
+      { $push: { coreValues: newCoreValue } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).send("No mission document found.");
+
+    res.status(200).send(updated.coreValues);
+  } catch (error) {
+    console.error("Error adding core value:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Delete a core value by ID
+router.patch("/DeleteCoreValue/:id", async (req, res) => {
+  try {
+    const idToRemove = req.params.id;
+
+    const updated = await Our_MissionsCollection.findOneAndUpdate(
+      {},
+      { $pull: { coreValues: { id: idToRemove } } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).send("No mission document found.");
+
+    res.status(200).send(updated.coreValues);
+  } catch (error) {
+    console.error("Error deleting core value:", error);
     res.status(500).send("Something went wrong.");
   }
 });
