@@ -53,6 +53,33 @@ router.patch("/AddCoreValue", async (req, res) => {
   }
 });
 
+// Add new mission goal
+router.patch("/AddMissionGoal", async (req, res) => {
+  try {
+    const newGoal = req.body;
+
+    if (!newGoal?.goal || !newGoal?.progress) {
+      return res.status(400).send("Missing goal or progress field.");
+    }
+
+    // Generate custom ID (unique)
+    newGoal.id = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+    const updated = await Our_MissionsCollection.findOneAndUpdate(
+      {},
+      { $push: { missionGoals: newGoal } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).send("No mission document found.");
+
+    res.status(200).send(updated.missionGoals);
+  } catch (error) {
+    console.error("Error adding mission goal:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // Delete a core value by ID
 router.patch("/DeleteCoreValue/:id", async (req, res) => {
   try {
@@ -69,6 +96,26 @@ router.patch("/DeleteCoreValue/:id", async (req, res) => {
     res.status(200).send(updated.coreValues);
   } catch (error) {
     console.error("Error deleting core value:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Delete a mission goal by ID
+router.patch("/DeleteMissionGoal/:id", async (req, res) => {
+  try {
+    const idToRemove = req.params.id;
+
+    const updated = await Our_MissionsCollection.findOneAndUpdate(
+      {},
+      { $pull: { missionGoals: { id: idToRemove } } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).send("No mission document found.");
+
+    res.status(200).send(updated.missionGoals);
+  } catch (error) {
+    console.error("Error deleting mission goal:", error);
     res.status(500).send("Something went wrong.");
   }
 });
