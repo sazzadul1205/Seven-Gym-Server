@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
   try {
     const result = await Our_MissionsCollection.findOne();
     if (!result) {
-      return res.status(404).send("No mission found.");
+      return res.status(404).send("No Our Mission found.");
     }
     res.send(result);
   } catch (error) {

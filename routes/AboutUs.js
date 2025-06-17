@@ -8,7 +8,10 @@ const AboutUsCollection = client.db("Seven-Gym").collection("AboutUs");
 // Get AboutUs
 router.get("/", async (req, res) => {
   try {
-    const result = await AboutUsCollection.find().toArray();
+    const result = await AboutUsCollection.findOne();
+    if (!result) {
+      return res.status(404).send("No About Us found.");
+    }
     res.send(result);
   } catch (error) {
     console.error("Error fetching AboutUs:", error);
