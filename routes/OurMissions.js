@@ -8,7 +8,7 @@ const Our_MissionsCollection = client
   .db("Seven-Gym")
   .collection("Our_Missions");
 
-// Get Our_Missions (as single object)
+// GET : Get Our_Missions (as single object)
 router.get("/", async (req, res) => {
   try {
     const result = await Our_MissionsCollection.findOne();
@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Add new core value
+// PATCH : Add new core value
 router.patch("/AddCoreValue", async (req, res) => {
   try {
     const newCoreValue = req.body;
@@ -53,7 +53,7 @@ router.patch("/AddCoreValue", async (req, res) => {
   }
 });
 
-// Add new mission goal
+// PATCH : Add new mission goal
 router.patch("/AddMissionGoal", async (req, res) => {
   try {
     const newGoal = req.body;
@@ -80,7 +80,7 @@ router.patch("/AddMissionGoal", async (req, res) => {
   }
 });
 
-// Delete a core value by ID
+// PATCH : Delete a core value by Id
 router.patch("/DeleteCoreValue/:id", async (req, res) => {
   try {
     const idToRemove = req.params.id;
@@ -100,7 +100,7 @@ router.patch("/DeleteCoreValue/:id", async (req, res) => {
   }
 });
 
-// Delete a mission goal by ID
+// PATCH : Delete a mission goal by Id
 router.patch("/DeleteMissionGoal/:id", async (req, res) => {
   try {
     const idToRemove = req.params.id;
