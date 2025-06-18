@@ -4,19 +4,19 @@ const cron = require("node-cron");
 const dayjs = require("dayjs");
 const { client } = require("../../config/db");
 
-// Collection for Trainer_Booking_Accepted
 const Trainer_Booking_AcceptedCollection = client
   .db("Seven-Gym")
   .collection("Trainer_Booking_Accepted");
 
-// Utility function to update expired bookings
+console.log("[BookingStatusUpdate] Cron Job Initialized");
+
+// Core Logic: Mark expired bookings as "Ended"
 async function cleanupExpiredTrainerBookings() {
-  console.log("Maintenance: Trainer bookings status update is starting...");
+  const now = dayjs();
+  const updated = [];
+
   try {
-    const now = dayjs();
-    const bookings = await Trainer_Booking_AcceptedCollection.find(
-      {}
-    ).toArray();
+    const bookings = await Trainer_Booking_AcceptedCollection.find().toArray();
 
     for (const booking of bookings) {
       if (!booking.startAt || !booking.durationWeeks) continue;
@@ -29,33 +29,83 @@ async function cleanupExpiredTrainerBookings() {
           { _id: booking._id },
           { $set: { status: "Ended" } }
         );
-        console.log(`Booking with _id ${booking._id} marked as Ended.`);
+
+        updated.push({
+          bookingId: booking._id,
+          trainerId: booking.trainerId,
+          userId: booking.userId,
+          startAt: booking.startAt,
+          durationWeeks: booking.durationWeeks,
+        });
+
+        console.log(
+          `[BookingStatusUpdate] Booking ${booking._id} marked as "Ended".`
+        );
       }
     }
-    console.log("Maintenance: Trainer bookings status update completed.");
+
+    if (updated.length === 0) {
+      console.log("[BookingStatusUpdate] No expired bookings found.");
+    }
+
+    return updated;
   } catch (error) {
-    console.error("Error updating trainer booking statuses:", error);
+    console.error("[BookingStatusUpdate] Error:", error.message);
+    return { error: error.message };
   }
 }
 
-// Schedule to run daily at 03:00
-cron.schedule("0 3 * * *", () => {
-  console.log("Scheduled trainer booking status update starting...");
-  cleanupExpiredTrainerBookings();
-  console.log("Scheduled update finished.");
+// Scheduled: Daily at 03:00 AM
+cron.schedule("0 3 * * *", async () => {
+  console.log("[BookingStatusUpdate] Scheduled cleanup started...");
+  const result = await cleanupExpiredTrainerBookings();
+  logBookingResult(result);
 });
+
+// 🪵 Logger Helper
+function logBookingResult(result) {
+  if (Array.isArray(result) && result.length > 0) {
+    result.forEach((b) => {
+      console.log(
+        `[BookingStatusUpdate] Ended: Booking ${b.bookingId} | Trainer: ${b.trainerId} | User: ${b.userId}`
+      );
+    });
+  } else if (result?.error) {
+    console.error(`[BookingStatusUpdate] Error: ${result.error}`);
+  } else {
+    console.log("[BookingStatusUpdate] No updates performed.");
+  }
+}
 
 // Manual trigger
 router.get("/RunNow", async (req, res) => {
-  await cleanupExpiredTrainerBookings();
-  res.send("Manual trainer booking status update completed.");
+  const result = await cleanupExpiredTrainerBookings();
+  logBookingResult(result);
+
+  if (Array.isArray(result) && result.length > 0) {
+    return res.json({
+      message: "Trainer booking status update completed.",
+      updated: result,
+    });
+  }
+
+  if (result?.error) {
+    return res.status(500).json({
+      message: "Error during trainer booking status update.",
+      error: result.error,
+    });
+  }
+
+  res.json({ message: "No expired bookings found." });
 });
 
-// Optional status check
+// Health/status route
+router.get("/", (req, res) => {
+  res.send("Trainer booking status cron job is active.");
+});
+
 router.get("/status", (req, res) => {
-  res.send("Trainer booking cleanup runs daily at 03:00.");
+  res.send("Trainer booking status cleanup runs daily at 03:00 AM.");
 });
-
-console.log("Trainer bookings status update cron is running");
 
 module.exports = router;

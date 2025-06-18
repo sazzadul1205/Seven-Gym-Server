@@ -5,7 +5,7 @@ const { client } = require("../../config/db");
 
 const UsersCollection = client.db("Seven-Gym").collection("Users");
 
-// Utility: Convert "dd-mm-yyyy" to a Date object
+// Utility: Convert "dd-mm-yyyy" to Date
 function parseDDMMYYYY(dateStr) {
   const [day, month, year] = dateStr.split("-");
   const date = new Date(`${year}-${month}-${day}`);
@@ -13,7 +13,7 @@ function parseDDMMYYYY(dateStr) {
   return date;
 }
 
-// Utility: Add a duration string like "1 Month", "3 Days", etc. to a Date
+// Utility: Add duration to date
 function addDuration(startDate, durationStr) {
   const [numStr, unit] = durationStr.split(" ");
   const num = parseInt(numStr);
@@ -21,7 +21,6 @@ function addDuration(startDate, durationStr) {
 
   const date = new Date(startDate);
 
-  // Adjust date based on duration unit
   switch (unit.toLowerCase()) {
     case "day":
     case "days":
@@ -42,55 +41,58 @@ function addDuration(startDate, durationStr) {
   return date;
 }
 
-// Utility: Format date to "YYYY-MM-DD" for comparison
+// Utility: Format to YYYY-MM-DD
 function formatDateISO(date) {
   return date.toISOString().split("T")[0];
 }
 
-// Core Logic: Check all users for expired tiers and downgrade if needed
-async function checkExpiredTiers() {
-  console.log("Starting Tier Expiry Check...");
+// Logging function
+const logTierResult = (result) => {
+  if (Array.isArray(result) && result.length > 0) {
+    console.log(`[TierExpiry] ${result.length} user(s) downgraded:`);
+    result.forEach(({ email, downgradedAt }) => {
+      console.log(`- ${email} at ${downgradedAt}`);
+    });
+  } else if (result?.error) {
+    console.error(`[TierExpiry] Error: ${result.error}`);
+  } else {
+    console.log("[TierExpiry] No tier downgrades needed.");
+  }
+};
 
+// Core Logic
+async function checkExpiredTiers() {
   try {
     const today = new Date();
     const todayISO = formatDateISO(today);
+    const downgraded = [];
 
-    // Fetch all users
     const users = await UsersCollection.find().toArray();
 
     for (const user of users) {
       const tier = user.tier;
       const tierData = user.tierDuration;
 
-      // Skip users with no tier, already Bronze, or no tier data
       if (!tier || tier === "Bronze" || !tierData) continue;
 
       let endDate;
-
       try {
         if (tierData.end) {
-          // Use end date if provided
           endDate = parseDDMMYYYY(tierData.end);
         } else if (tierData.start && tierData.duration) {
-          // If no end date, calculate it using start + duration
           const startDate = parseDDMMYYYY(tierData.start);
           endDate = addDuration(startDate, tierData.duration);
         } else {
-          // Invalid tier data
           console.warn(`User ${user.email} missing tier dates.`);
           continue;
         }
       } catch (err) {
-        // Log if date parsing fails
         console.error(`Date error for ${user.email}:`, err.message);
         continue;
       }
 
       const endISO = formatDateISO(endDate);
-
-      // If tier has expired
       if (endISO <= todayISO) {
-        // Downgrade user to Bronze and remove tier info
         await UsersCollection.updateOne(
           { _id: user._id },
           {
@@ -98,31 +100,54 @@ async function checkExpiredTiers() {
             $unset: { tierDuration: "" },
           }
         );
-        console.log(`Downgraded ${user.email} to Bronze.`);
+
+        downgraded.push({
+          email: user.email,
+          downgradedAt: new Date().toISOString(),
+        });
       }
     }
 
-    console.log("Tier Expiry Check Completed.");
+    return downgraded;
   } catch (err) {
-    console.error("Error in Tier Expiry Check:", err);
+    return { error: err.message };
   }
 }
 
-// Scheduler: Runs daily at 00:00 (midnight)
-cron.schedule("0 0 * * *", () => {
-  console.log("Running Scheduled Tier Expiry Check...");
-  checkExpiredTiers();
+// Scheduler
+cron.schedule("0 0 * * *", async () => {
+  console.log("[TierExpiry] Running scheduled check...");
+  const result = await checkExpiredTiers();
+  logTierResult(result);
 });
 
-// API: Basic status check
+// Health Check
 router.get("/", (req, res) => {
   res.send("Tier expiration cron is active.");
 });
 
-// API: Manual trigger for testing/admin use
+// Manual Trigger
 router.get("/RunNow", async (req, res) => {
-  await checkExpiredTiers();
-  res.send("Manual tier check completed.");
+  const result = await checkExpiredTiers();
+  logTierResult(result);
+
+  if (Array.isArray(result) && result.length > 0) {
+    return res.json({
+      message: `${result.length} user(s) downgraded to Bronze.`,
+      downgraded: result,
+    });
+  }
+
+  if (result?.error) {
+    return res
+      .status(500)
+      .json({ message: "Error in tier check", error: result.error });
+  }
+
+  res.json({
+    message: "Manual tier check completed. No users downgraded.",
+    downgraded: [],
+  });
 });
 
 module.exports = router;

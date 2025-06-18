@@ -3,66 +3,98 @@ const router = express.Router();
 const cron = require("node-cron");
 const { client } = require("../../config/db");
 
-// Collection for Users
 const UsersCollection = client.db("Seven-Gym").collection("Users");
 
-// Utility function to delete old workouts
-async function deleteOldWorkouts() {
-  console.log("Maintenance: Deleting workouts older than 7 days...");
-  try {
-    const today = new Date();
-    today.setDate(today.getDate() - 7); // Calculate date 7 days ago
-    const cutoffDate = today.toISOString(); // Convert it to ISO string for comparison
+console.log("DeleteOldWorkouts job initialized");
 
-    // Fetch all users
+// Utility: Main handler function
+async function deleteOldWorkouts() {
+  const deletedLogs = [];
+  const now = new Date();
+  const cutoff = new Date();
+  cutoff.setDate(now.getDate() - 7);
+  const cutoffISO = cutoff.toISOString();
+
+  try {
     const users = await UsersCollection.find().toArray();
 
     for (const user of users) {
-      if (user.recentWorkouts && user.recentWorkouts.length > 0) {
-        // Filter workouts that are older than 7 days based on registeredDateAndTime
-        const updatedWorkouts = user.recentWorkouts.filter(
-          (workout) =>
-            new Date(workout.registeredDateAndTime) >= new Date(cutoffDate)
-        );
+      const workouts = user.recentWorkouts || [];
+      const validWorkouts = workouts.filter(
+        (w) => new Date(w.registeredDateAndTime) >= new Date(cutoffISO)
+      );
 
-        // Update the user's recentWorkouts array with only the valid workouts (within the last 7 days)
+      // If deletion occurred
+      if (validWorkouts.length < workouts.length) {
         await UsersCollection.updateOne(
           { _id: user._id },
-          { $set: { recentWorkouts: updatedWorkouts } }
+          { $set: { recentWorkouts: validWorkouts } }
         );
+
+        deletedLogs.push({
+          email: user.email,
+          removedCount: workouts.length - validWorkouts.length,
+          updatedAt: new Date().toISOString(),
+        });
       }
     }
 
-    console.log("Maintenance: Old workouts deletion completed successfully.");
-  } catch (error) {
-    console.error("Error deleting old workouts:", error);
-    console.log("Maintenance: Old workouts deletion encountered errors.");
+    return deletedLogs;
+  } catch (err) {
+    return { error: err.message };
   }
 }
 
-// Set up the cron job to run daily at midnight (00:00)
-cron.schedule("0 0 * * *", () => {
-  console.log("Scheduled maintenance is starting...");
-  deleteOldWorkouts();
-  console.log("Scheduled maintenance completed.");
+// Logger
+function logWorkoutCleanup(result) {
+  if (Array.isArray(result) && result.length > 0) {
+    console.log(`[WorkoutCleanup] ${result.length} user(s) cleaned up:`);
+    result.forEach(({ email, removedCount, updatedAt }) => {
+      console.log(
+        `- ${email}: ${removedCount} workout(s) removed at ${updatedAt}`
+      );
+    });
+  } else if (result?.error) {
+    console.error(`[WorkoutCleanup] Error: ${result.error}`);
+  } else {
+    console.log("[WorkoutCleanup] No old workouts found.");
+  }
+}
+
+// Cron job: runs daily at midnight
+cron.schedule("0 0 * * *", async () => {
+  console.log("[WorkoutCleanup] Scheduled cleanup starting...");
+  const result = await deleteOldWorkouts();
+  logWorkoutCleanup(result);
 });
 
-// Basic route to confirm the cron job is running
+// Basic check
 router.get("/", (req, res) => {
-  res.send("Cron job for deleting old workouts is running.");
+  res.send("Old workout cleanup cron is active.");
 });
 
-// Maintenance status route (optional)
-router.get("/status", (req, res) => {
-  res.send("Scheduled maintenance is set to run daily at midnight.");
-});
-
-console.log("Delete Old Workouts is running");
-
-// Manual trigger route (for development/testing only)
+// Manual route
 router.get("/RunNow", async (req, res) => {
-  await deleteOldWorkouts();
-  res.send("Manual check completed.");
+  const result = await deleteOldWorkouts();
+  logWorkoutCleanup(result);
+
+  if (Array.isArray(result) && result.length > 0) {
+    return res.json({
+      message: `${result.length} user(s) had workouts cleaned.`,
+      cleaned: result,
+    });
+  }
+
+  if (result?.error) {
+    return res
+      .status(500)
+      .json({ message: "Error during workout cleanup", error: result.error });
+  }
+
+  res.json({
+    message: "Manual cleanup complete. No old workouts found.",
+    cleaned: [],
+  });
 });
 
 module.exports = router;
