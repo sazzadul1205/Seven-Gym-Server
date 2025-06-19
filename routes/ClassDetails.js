@@ -9,16 +9,24 @@ const Class_DetailsCollection = client
 
 // Get Class_Details by Module
 router.get("/", async (req, res) => {
-  const moduleName = req.query.module; // Get the module name from query parameters
-  try {
-    // If `module` is provided, filter by it; otherwise, fetch all records
-    const query = moduleName ? { module: moduleName } : {};
-    const result = await Class_DetailsCollection.find(query).toArray();
+  const moduleName = req.query.module;
 
-    if (result.length === 0) {
-      return res.status(404).send("No classes found for the specified module.");
+  try {
+    if (moduleName) {
+      // If a module name is provided, fetch a single matching class
+      const result = await Class_DetailsCollection.findOne({
+        module: moduleName,
+      });
+
+      if (!result) {
+        return res.status(404).send("No class found for the specified module.");
+      }
+
+      return res.send(result); // Send as an object
     }
 
+    // If no module filter, return all as an array
+    const result = await Class_DetailsCollection.find().toArray();
     res.send(result);
   } catch (error) {
     console.error("Error fetching Class_Details:", error);
