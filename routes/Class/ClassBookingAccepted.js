@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { client } = require("../config/db");
+const { client } = require("../../config/db");
 
 // Collection for Class Booking Accepted
 const Class_Booking_AcceptedCollection = client

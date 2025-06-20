@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { client } = require("../config/db");
+const { client } = require("../../config/db");
 
 // Collection for Class Booking Completed
 const Class_Booking_CompletedCollection = client
   .db("Seven-Gym")
   .collection("Class_Booking_Completed");
 
-// GET : Get all Class Booking Completed 
+// GET : Get all Class Booking Completed
 router.get("/", async (req, res) => {
   try {
     const result = await Class_Booking_CompletedCollection.find().toArray();
@@ -27,7 +27,9 @@ router.post("/", async (req, res) => {
       return res.status(400).send("Invalid Completed data.");
     }
 
-    const result = await Class_Booking_CompletedCollection.insertOne(newRequest);
+    const result = await Class_Booking_CompletedCollection.insertOne(
+      newRequest
+    );
 
     // Check if the insertedId exists
     if (result.insertedId) {
