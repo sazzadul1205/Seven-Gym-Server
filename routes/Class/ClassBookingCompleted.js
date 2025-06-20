@@ -46,4 +46,18 @@ router.post("/", async (req, res) => {
   }
 });
 
+// DELETE: Delete all Class Booking Completed entries
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Class_Booking_CompletedCollection.deleteMany({});
+    res.send({
+      message: "All completed class bookings deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting Class Booking Completed data:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;

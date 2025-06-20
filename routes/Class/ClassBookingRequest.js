@@ -8,10 +8,16 @@ const Class_Booking_RequestCollection = client
   .db("Seven-Gym")
   .collection("Class_Booking_Request");
 
-// GET : Get all Class Booking Request
+// GET: Get all Class Booking Requests (optional email filter)
 router.get("/", async (req, res) => {
   try {
-    const result = await Class_Booking_RequestCollection.find().toArray();
+    const { email } = req.query;
+
+    // If email is provided, filter; otherwise fetch all
+    const query = email ? { "applicantData.email": email.toLowerCase() } : {};
+
+    const result = await Class_Booking_RequestCollection.find(query).toArray();
+
     res.send(result);
   } catch (error) {
     console.error("Error fetching Class Booking Request Data:", error);
@@ -68,6 +74,20 @@ router.delete("/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Error deleting booking request:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// DELETE: Delete all Class Booking Request entries
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Class_Booking_RequestCollection.deleteMany({});
+    res.send({
+      message: "All requested class bookings deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting Class Booking Request data:", error);
     res.status(500).send("Something went wrong.");
   }
 });

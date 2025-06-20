@@ -44,4 +44,18 @@ router.post("/", async (req, res) => {
   }
 });
 
+// DELETE: Delete all Class Booking Rejected entries
+router.delete("/DeleteAll", async (req, res) => {
+  try {
+    const result = await Class_Booking_RejectedCollection.deleteMany({});
+    res.send({
+      message: "All rejected class bookings deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting Class Booking Rejected data:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 module.exports = router;
