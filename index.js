@@ -20,12 +20,10 @@ const HomeWelcome = require("./routes/HomeWelcome");
 const OurMissions = require("./routes/OurMissions");
 const GymFeatures = require("./routes/GymFeatures");
 const HomeServices = require("./routes/HomeServices");
-const ClassDetails = require("./routes/ClassDetails");
 const Testimonials = require("./routes/Testimonials");
 const CommunityPosts = require("./routes/CommunityPosts");
 const TermsOfService = require("./routes/TermsOfService");
 const OurClassesSchedule = require("./routes/OurClassesSchedule");
-const ClassBookingRequest = require("./routes/ClassBookingRequest");
 
 // Trainer Data
 const Trainers = require("./routes/TrainerData/Trainers");
@@ -36,6 +34,13 @@ const TrainerBookingRequest = require("./routes/TrainerData/TrainerBookingReques
 const TrainerStudentHistory = require("./routes/TrainerData/TrainerStudentHistory");
 const TrainerBookingAccepted = require("./routes/TrainerData/TrainerBookingAccepted");
 const TrainerClassInformation = require("./routes/TrainerData/TrainerClassInformation");
+
+// Class Fetch
+const ClassDetails = require("./routes/Class/ClassDetails");
+const ClassBookingRequest = require("./routes/Class/ClassBookingRequest");
+const ClassBookingAccepted = require("./routes/Class/ClassBookingAccepted");
+const ClassBookingRejected = require("./routes/Class/ClassBookingRejected");
+const ClassBookingCompleted = require("./routes/Class/ClassBookingCompleted");
 
 // User Schedule
 const UserSchedule = require("./routes/UserSchedule/UserSchedule");
@@ -120,14 +125,12 @@ app.use("/Our_Classes", OurClasses);
 app.use("/Gym_Features", GymFeatures);
 app.use("/Our_Missions", OurMissions);
 app.use("/Testimonials", Testimonials);
-app.use("/Class_Details", ClassDetails);
 app.use("/CommunityPosts", CommunityPosts);
 app.use("/Home_Banner_Section", HomeBanner);
 app.use("/Terms_Of_Service", TermsOfService);
 app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
 app.use("/Our_Classes_Schedule", OurClassesSchedule);
-app.use("/Class_Booking_Request", ClassBookingRequest);
 
 // Trainer Data
 app.use("/Trainers", Trainers);
@@ -138,6 +141,13 @@ app.use("/Trainer_Booking_Request", TrainerBookingRequest);
 app.use("/Trainer_Student_History", TrainerStudentHistory);
 app.use("/Trainer_Booking_Accepted", TrainerBookingAccepted);
 app.use("/Trainer_Class_Information", TrainerClassInformation);
+
+// Class Data
+app.use("/Class_Details", ClassDetails);
+app.use("/Class_Booking_Request", ClassBookingRequest);
+app.use("/Class_Booking_Accepted", ClassBookingAccepted);
+app.use("/Class_Booking_Rejected", ClassBookingRejected);
+app.use("/Class_Booking_Completed", ClassBookingCompleted);
 
 // User Schedule
 app.use("/User_Schedule", UserSchedule);
