@@ -76,18 +76,45 @@ router.post("/", async (req, res) => {
   }
 });
 
-// DELETE: Delete all Class Booking Accepted entries
-router.delete("/DeleteAll", async (req, res) => {
+// DELETE: Delete a specific Class Booking Accepted by ID
+router.delete("/:id", async (req, res) => {
   try {
-    const result = await Class_Booking_AcceptedCollection.deleteMany({});
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send("Invalid ID format.");
+    }
+
+    const result = await Class_Booking_AcceptedCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send("No booking found with that ID.");
+    }
+
     res.send({
-      message: "All accepted class bookings deleted successfully.",
+      message: "Booking Accepted deleted successfully.",
       deletedCount: result.deletedCount,
     });
   } catch (error) {
-    console.error("Error deleting Class Booking Accepted data:", error);
+    console.error("Error deleting Class Booking Accepted by ID:", error);
     res.status(500).send("Something went wrong.");
   }
 });
+
+// DELETE: Delete all Class Booking Accepted entries
+// router.delete("/DeleteAll", async (req, res) => {
+//   try {
+//     const result = await Class_Booking_AcceptedCollection.deleteMany({});
+//     res.send({
+//       message: "All accepted class bookings deleted successfully.",
+//       deletedCount: result.deletedCount,
+//     });
+//   } catch (error) {
+//     console.error("Error deleting Class Booking Accepted data:", error);
+//     res.status(500).send("Something went wrong.");
+//   }
+// });
 
 module.exports = router;
