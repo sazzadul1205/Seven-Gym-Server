@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Class Booking Accepted
 const Class_Booking_AcceptedCollection = client
@@ -14,6 +15,37 @@ router.get("/", async (req, res) => {
     res.send(result);
   } catch (error) {
     console.error("Error fetching Class Booking Accepted Data:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// PUT : Update a Class Booking Accepted by ID
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (!id || !updateData) {
+      return res.status(400).send("Missing ID or update data.");
+    }
+
+    const result = await Class_Booking_AcceptedCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateData }
+    );
+
+    if (result.matchedCount === 0) {
+      return res
+        .status(404)
+        .send("No booking accepted record found with that ID.");
+    }
+
+    res.send({
+      message: "Booking accepted updated successfully.",
+      updatedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error updating Class Booking Accepted:", error);
     res.status(500).send("Something went wrong.");
   }
 });
