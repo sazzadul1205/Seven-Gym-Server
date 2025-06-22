@@ -64,6 +64,7 @@ const CheckExpiredTiers = require("./routes/Automatic/CheckExpiredTiers");
 const DeleteOldWorkouts = require("./routes/Automatic/DeleteOldWorkouts");
 const BookingSessionExpire = require("./routes/Automatic/BookingSessionExpire");
 const CleanupTrainerSessions = require("./routes/Automatic/CleanupTrainerSessions");
+const ClassCompletedRemove = require("./routes/Automatic/ClassCompletedRemove");
 const CleanupExpiredTrainerBookings = require("./routes/Automatic/CleanupExpiredTrainerBookings");
 
 // Admin Firebase Delete User
@@ -172,6 +173,7 @@ app.use("/AutoUnBan", AutoUnBan);
 app.use("/CheckExpiredTiers", CheckExpiredTiers);
 app.use("/DeleteOldWorkouts", DeleteOldWorkouts);
 app.use("/BookingSessionExpire", BookingSessionExpire);
+app.use("/ClassCompletedRemove", ClassCompletedRemove);
 app.use("/CleanupTrainerSessions", CleanupTrainerSessions);
 app.use("/CleanupExpiredTrainerBookings", CleanupExpiredTrainerBookings);
 
