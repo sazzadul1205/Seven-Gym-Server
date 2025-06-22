@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
   try {
     const paymentData = req.body;
 
-    if (!paymentData || !paymentData.bookingId || !paymentData.email) {
+    if (!paymentData || !paymentData.stripePaymentID || !paymentData.paidAt) {
       return res.status(400).json({ error: "Missing required payment data" });
     }
 
@@ -65,4 +65,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-Class_Bookingodule.exports = router;
+module.exports = router;

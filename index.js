@@ -48,6 +48,8 @@ const UserSchedule = require("./routes/UserSchedule/UserSchedule");
 // Payment Data
 const TierUpgradeRefund = require("./routes/Payment/TierUpgradeRefund");
 const TierUpgradePayment = require("./routes/Payment/TierUpgradePayment");
+const ClassBookingRefund = require("./routes/Payment/ClassBookingRefund");
+const ClassBookingPayment = require("./routes/Payment/ClassBookingPayment");
 const TrainerSessionRefund = require("./routes/Payment/TrainerSessionRefund");
 const TrainerSessionPayment = require("./routes/Payment/TrainerSessionPayment");
 const TrainerSessionCompletedActive = require("./routes/Payment/TrainerSessionCompleted&Active");
@@ -155,6 +157,8 @@ app.use("/User_Schedule", UserSchedule);
 // Payment Data
 app.use("/Tier_Upgrade_Refund", TierUpgradeRefund);
 app.use("/Tier_Upgrade_Payment", TierUpgradePayment);
+app.use("/Class_Booking_Refund", ClassBookingRefund);
+app.use("/Class_Booking_Payment", ClassBookingPayment);
 app.use("/Trainer_Session_Refund", TrainerSessionRefund);
 app.use("/Trainer_Session_Payment", TrainerSessionPayment);
 app.use("/Trainer_Session_Completed_&_Active", TrainerSessionCompletedActive);
