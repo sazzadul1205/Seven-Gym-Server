@@ -8,10 +8,18 @@ const Class_Booking_RefundCollection = client
   .db("Seven-Gym")
   .collection("Class_Booking_Refund");
 
-// GET all refund records
+// GET all refund records, optionally filtered by email
 router.get("/", async (req, res) => {
   try {
-    const refunds = await Class_Booking_RefundCollection.find().toArray();
+    const { email } = req.query;
+
+    const query = {};
+    if (email) {
+      query["applicant.applicantData.email"] = email.trim().toLowerCase();
+    }
+
+    const refunds = await Class_Booking_RefundCollection.find(query).toArray();
+
     res.status(200).json(refunds);
   } catch (error) {
     console.error("Error fetching refunds:", error);

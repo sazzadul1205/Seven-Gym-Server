@@ -8,11 +8,15 @@ const Class_Booking_AcceptedCollection = client
   .db("Seven-Gym")
   .collection("Class_Booking_Accepted");
 
-// GET : Get all Class Booking Accepted
+// GET : Get all Class Booking Accepted (optionally filtered by applicant email)
 router.get("/", async (req, res) => {
   try {
-    const result = await Class_Booking_AcceptedCollection.find().toArray();
-    res.send(result);
+    const { email } = req.query;
+
+    const query = email ? { "applicant.applicantData.email": email } : {};
+
+    const result = await Class_Booking_AcceptedCollection.find(query).toArray();
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching Class Booking Accepted Data:", error);
     res.status(500).send("Something went wrong.");

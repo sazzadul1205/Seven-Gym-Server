@@ -12,11 +12,10 @@ const Class_Booking_PaymentCollection = client
 // Optional: ?email=user@example.com or ?bookingId=123
 router.get("/", async (req, res) => {
   try {
-    const { email, bookingId } = req.query;
+    const { email } = req.query;
 
     const query = {};
-    if (email) query.email = email;
-    if (bookingId) query.bookingId = bookingId;
+    if (email) query["applicant.applicantData.email"] = email;
 
     const payments = await Class_Booking_PaymentCollection.find(
       query
