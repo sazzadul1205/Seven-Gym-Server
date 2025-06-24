@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Class_Details
 const Class_DetailsCollection = client
@@ -77,6 +78,39 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     res.status(500).send("Something went wrong.");
+  }
+});
+
+// PUT Endpoint: Update Class Details by ID
+router.put("/:id", async (req, res) => {
+  const classId = req.params.id;
+  const updatedData = req.body;
+
+  try {
+    // Validate ID format
+    if (!ObjectId.isValid(classId)) {
+      return res.status(400).send("Invalid class ID.");
+    }
+
+    // Build the update query
+    const filter = { _id: new ObjectId(classId) };
+    const updateDoc = {
+      $set: {
+        ...updatedData,
+      },
+    };
+
+    // Execute update
+    const result = await Class_DetailsCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).send("Class not found.");
+    }
+
+    res.send({ message: "Class updated successfully." });
+  } catch (error) {
+    console.error("Error updating Class_Detail:", error);
+    res.status(500).send("Something went wrong while updating the class.");
   }
 });
 
