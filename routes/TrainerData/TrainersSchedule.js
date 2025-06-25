@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { client } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Collection for Trainers_Schedule
 const Trainers_ScheduleCollection = client
@@ -260,34 +261,25 @@ router.get("/BasicInfoByID", async (req, res) => {
   }
 });
 
-// Update Trainer's Schedule Endpoint
-router.put("/Update", async (req, res) => {
-  // Extract the trainer's name and updated schedule from the request body
-  const { trainerName, trainerSchedule } = req.body;
-
-  // Validate that both trainerName and trainerSchedule are provided
-  if (!trainerName || !trainerSchedule) {
-    return res.status(400).send("Trainer name and schedule are required.");
-  }
+// GET route to fetch schedule data by trainerId
+router.get("/TrainerId/:trainerId", async (req, res) => {
+  const { trainerId } = req.params;
 
   try {
-    // Attempt to update the trainer's schedule in the database
-    const result = await Trainers_ScheduleCollection.updateOne(
-      { trainerName: trainerName }, // Find the trainer by their name
-      { $set: { trainerSchedule: trainerSchedule } } // Update the trainer's schedule with the new data
-    );
+    const scheduleDoc = await Trainers_ScheduleCollection.findOne({
+      trainerId,
+    });
 
-    // Check if the trainer was found and updated in the database
-    if (result.matchedCount === 0) {
-      return res.status(404).send("Trainer not found.");
+    if (!scheduleDoc) {
+      return res
+        .status(404)
+        .json({ error: "Schedule not found for this trainerId." });
     }
 
-    // Send a success response if the update was successful
-    res.send("Trainer schedule updated successfully.");
+    res.json(scheduleDoc);
   } catch (error) {
-    // Log the error for debugging and send a server error response
-    console.error("Error updating Trainer's Schedule:", error);
-    res.status(500).send("Something went wrong while updating the schedule.");
+    console.error("Error fetching schedule by trainerId:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -424,6 +416,37 @@ router.post("/UpdateParticipant", async (req, res) => {
   } catch (error) {
     console.error("Error updating startAt:", error);
     res.status(500).send("Internal Server Error.");
+  }
+});
+
+// Update Trainer's Schedule Endpoint
+router.put("/Update", async (req, res) => {
+  // Extract the trainer's name and updated schedule from the request body
+  const { trainerName, trainerSchedule } = req.body;
+
+  // Validate that both trainerName and trainerSchedule are provided
+  if (!trainerName || !trainerSchedule) {
+    return res.status(400).send("Trainer name and schedule are required.");
+  }
+
+  try {
+    // Attempt to update the trainer's schedule in the database
+    const result = await Trainers_ScheduleCollection.updateOne(
+      { trainerName: trainerName }, // Find the trainer by their name
+      { $set: { trainerSchedule: trainerSchedule } } // Update the trainer's schedule with the new data
+    );
+
+    // Check if the trainer was found and updated in the database
+    if (result.matchedCount === 0) {
+      return res.status(404).send("Trainer not found.");
+    }
+
+    // Send a success response if the update was successful
+    res.send("Trainer schedule updated successfully.");
+  } catch (error) {
+    // Log the error for debugging and send a server error response
+    console.error("Error updating Trainer's Schedule:", error);
+    res.status(500).send("Something went wrong while updating the schedule.");
   }
 });
 

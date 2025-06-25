@@ -81,6 +81,72 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT: Add or Remove a Trainer to/from a Class by module name
+router.put("/trainer", async (req, res) => {
+  try {
+    const { module, trainer, action } = req.body;
+
+    console.log("Incoming payload:", req.body);
+
+    // Validate required fields
+    if (!module || !trainer || !trainer._id || !action) {
+      return res
+        .status(400)
+        .send("Module, trainer (with _id), and action are required.");
+    }
+
+    // Validate trainer ID format
+    if (!ObjectId.isValid(trainer._id)) {
+      return res.status(400).send("Invalid trainer ID format.");
+    }
+
+    // Find the class by module
+    const classData = await Class_DetailsCollection.findOne({ module });
+
+    if (!classData) {
+      return res.status(404).send("Class not found for the specified module.");
+    }
+
+    let updatedTrainers;
+
+    if (action === "add") {
+      const alreadyExists = classData.trainers?.some(
+        (t) => t._id === trainer._id
+      );
+
+      if (alreadyExists) {
+        return res.status(409).send("Trainer is already added to this class.");
+      }
+
+      updatedTrainers = [...(classData.trainers || []), trainer];
+    } else if (action === "remove") {
+      updatedTrainers = (classData.trainers || []).filter(
+        (t) => t._id !== trainer._id
+      );
+    } else {
+      return res.status(400).send("Invalid action. Use 'add' or 'remove'.");
+    }
+
+    const updateResult = await Class_DetailsCollection.updateOne(
+      { module },
+      { $set: { trainers: updatedTrainers } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(500).send("Failed to update trainers.");
+    }
+
+    res.send({
+      message: `Trainer ${
+        action === "add" ? "added to" : "removed from"
+      } class.`,
+    });
+  } catch (error) {
+    console.error("Trainer update error:", error);
+    res.status(500).send("Something went wrong while updating the trainer.");
+  }
+});
+
 // PUT Endpoint: Update Class Details by ID
 router.put("/:id", async (req, res) => {
   const classId = req.params.id;
