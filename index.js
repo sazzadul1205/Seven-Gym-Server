@@ -23,7 +23,6 @@ const HomeServices = require("./routes/HomeServices");
 const Testimonials = require("./routes/Testimonials");
 const CommunityPosts = require("./routes/CommunityPosts");
 const TermsOfService = require("./routes/TermsOfService");
-const OurClassesSchedule = require("./routes/OurClassesSchedule");
 
 // Trainer Data
 const Trainers = require("./routes/TrainerData/Trainers");
@@ -37,6 +36,7 @@ const TrainerClassInformation = require("./routes/TrainerData/TrainerClassInform
 
 // Class Fetch
 const ClassDetails = require("./routes/Class/ClassDetails");
+const OurClassesSchedule = require("./routes/Class/OurClassesSchedule");
 const ClassBookingRequest = require("./routes/Class/ClassBookingRequest");
 const ClassBookingAccepted = require("./routes/Class/ClassBookingAccepted");
 const ClassBookingRejected = require("./routes/Class/ClassBookingRejected");
@@ -134,7 +134,6 @@ app.use("/Home_Banner_Section", HomeBanner);
 app.use("/Terms_Of_Service", TermsOfService);
 app.use("/Home_Welcome_Section", HomeWelcome);
 app.use("/Home_Services_Section", HomeServices);
-app.use("/Our_Classes_Schedule", OurClassesSchedule);
 
 // Trainer Data
 app.use("/Trainers", Trainers);
@@ -148,6 +147,7 @@ app.use("/Trainer_Class_Information", TrainerClassInformation);
 
 // Class Data
 app.use("/Class_Details", ClassDetails);
+app.use("/Our_Classes_Schedule", OurClassesSchedule);
 app.use("/Class_Booking_Request", ClassBookingRequest);
 app.use("/Class_Booking_Accepted", ClassBookingAccepted);
 app.use("/Class_Booking_Rejected", ClassBookingRejected);

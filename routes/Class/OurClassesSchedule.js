@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { client } = require("../config/db");
+const { client } = require("../../config/db");
 
 // Collection for Our_Classes
 const Our_Classes_ScheduleCollection = client
@@ -121,6 +121,52 @@ router.get("/SearchByModule", async (req, res) => {
     res.send(formattedResult);
   } catch (error) {
     console.error("Error fetching classes by module:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
+// Update class times for a specific module based on given days
+router.put("/UpdateClassTime/:module", async (req, res) => {
+  const moduleName = req.params.module;
+  const dayUpdates = req.body;
+
+  if (!Array.isArray(dayUpdates) || !moduleName) {
+    return res
+      .status(400)
+      .send("Invalid request: module and day-based updates are required.");
+  }
+
+  try {
+    let totalUpdated = 0;
+
+    for (const update of dayUpdates) {
+      const { day, startTime, endTime } = update;
+
+      if (!day || !startTime || !endTime) continue;
+
+      // Fetch document for the specific day
+      const doc = await Our_Classes_ScheduleCollection.findOne({ day });
+
+      if (!doc) continue;
+
+      // Update only the matching module in classes array
+      const updatedClasses = doc.classes.map((cls) =>
+        cls.module === moduleName ? { ...cls, startTime, endTime } : cls
+      );
+
+      const result = await Our_Classes_ScheduleCollection.updateOne(
+        { _id: doc._id },
+        { $set: { classes: updatedClasses } }
+      );
+
+      if (result.modifiedCount > 0) totalUpdated++;
+    }
+
+    res.send({
+      message: `Updated module "${moduleName}" in ${totalUpdated} day(s).`,
+    });
+  } catch (error) {
+    console.error("Error updating classes:", error);
     res.status(500).send("Something went wrong.");
   }
 });
