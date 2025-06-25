@@ -8,7 +8,7 @@ const Class_DetailsCollection = client
   .db("Seven-Gym")
   .collection("Class_Details");
 
-// Get Class_Details by Module
+// Get : Class_Details by Module
 router.get("/", async (req, res) => {
   const moduleName = req.query.module;
 
@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
         return res.status(404).send("No class found for the specified module.");
       }
 
-      return res.send(result); // Send as an object
+      return res.send(result);
     }
 
     // If no module filter, return all as an array
@@ -35,9 +35,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get Class_Details by Multiple Modules
+// Get : Class_Details by Multiple Modules
 router.get("/multi", async (req, res) => {
-  const { modules } = req.query; // Get `modules` from query parameters (comma-separated values expected)
+  const { modules } = req.query;
 
   try {
     if (!modules) {
@@ -64,7 +64,7 @@ router.get("/multi", async (req, res) => {
   }
 });
 
-// POST Endpoint: Add a new Class Detail
+// POST : Endpoint: Add a new Class Detail
 router.post("/", async (req, res) => {
   try {
     const newClassDetail = req.body; // Get new class details from the request body
@@ -85,8 +85,6 @@ router.post("/", async (req, res) => {
 router.put("/trainer", async (req, res) => {
   try {
     const { module, trainer, action } = req.body;
-
-    console.log("Incoming payload:", req.body);
 
     // Validate required fields
     if (!module || !trainer || !trainer._id || !action) {
@@ -111,7 +109,7 @@ router.put("/trainer", async (req, res) => {
 
     if (action === "add") {
       const alreadyExists = classData.trainers?.some(
-        (t) => t._id === trainer._id
+        (t) => t._id.toString() === trainer._id
       );
 
       if (alreadyExists) {
@@ -121,7 +119,7 @@ router.put("/trainer", async (req, res) => {
       updatedTrainers = [...(classData.trainers || []), trainer];
     } else if (action === "remove") {
       updatedTrainers = (classData.trainers || []).filter(
-        (t) => t._id !== trainer._id
+        (t) => t._id.toString() !== trainer._id
       );
     } else {
       return res.status(400).send("Invalid action. Use 'add' or 'remove'.");
