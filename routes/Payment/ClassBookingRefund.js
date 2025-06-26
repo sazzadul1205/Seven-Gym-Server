@@ -27,6 +27,50 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET daily refund status
+router.get("/DailyStatus", async (req, res) => {
+  try {
+    const result = await Class_Booking_RefundCollection.aggregate([
+      {
+        $match: {
+          paid: true,
+          droppedAt: { $exists: true },
+        },
+      },
+      {
+        $addFields: {
+          droppedAtConverted: { $toDate: "$droppedAt" }, // convert string to actual date
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$droppedAtConverted" },
+          },
+          totalRefundAmount: { $sum: "$refundAmount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      {
+        $project: {
+          date: "$_id",
+          refundAmount: "$totalRefundAmount",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]).toArray();
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error generating daily refund summary:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // POST a new refund record
 router.post("/", async (req, res) => {
   try {

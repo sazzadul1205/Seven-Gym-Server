@@ -27,6 +27,50 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET : Get Daily Status
+router.get("/DailyStatus", async (req, res) => {
+  try {
+    const result = await Class_Booking_PaymentCollection.aggregate([
+      {
+        $match: {
+          paid: true,
+          paidAt: { $exists: true },
+        },
+      },
+      {
+        $addFields: {
+          paidAtConverted: { $toDate: "$paidAt" }, // Convert to proper Date object
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$paidAtConverted" },
+          },
+          totalPrice: { $sum: "$applicant.totalPrice" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      {
+        $project: {
+          date: "$_id",
+          totalPrice: 1,
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]).toArray();
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error generating daily payment summary:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST: Add new payment record
 router.post("/", async (req, res) => {
   try {
