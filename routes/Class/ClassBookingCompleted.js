@@ -24,6 +24,45 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET: Daily class booking completion summary by endDate
+router.get("/DailyStatus", async (req, res) => {
+  try {
+    const data = await Class_Booking_CompletedCollection.find({}).toArray();
+
+    const dailyStatsMap = {};
+
+    data.forEach((item) => {
+      const endDate = item.endDate;
+      const price = item.applicant?.totalPrice || 0;
+
+      // Convert "DD-MM-YYYY" → "YYYY-MM-DD"
+      const [dd, mm, yyyy] = endDate.split("-");
+      const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+      if (!dailyStatsMap[formattedDate]) {
+        dailyStatsMap[formattedDate] = {
+          date: formattedDate,
+          count: 1,
+          totalPrice: price,
+        };
+      } else {
+        dailyStatsMap[formattedDate].count += 1;
+        dailyStatsMap[formattedDate].totalPrice += price;
+      }
+    });
+
+    // Convert to array and sort by date ascending
+    const dailyStatsArray = Object.values(dailyStatsMap).sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+
+    res.status(200).json(dailyStatsArray);
+  } catch (error) {
+    console.error("Error generating daily class booking summary:", error);
+    res.status(500).send("Something went wrong.");
+  }
+});
+
 // POST : post Completed to create a new booking Completed
 router.post("/", async (req, res) => {
   try {
