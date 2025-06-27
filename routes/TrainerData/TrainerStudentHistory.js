@@ -8,25 +8,34 @@ const Trainer_Student_HistoryCollection = client
   .db("Seven-Gym")
   .collection("Trainer_Student_History");
 
-// Get Trainer_Student_History
+// Get Trainer_Student_History (query by trainerId and/or name)
 router.get("/", async (req, res) => {
   try {
-    const { trainerId } = req.query;
+    const { trainerId, name } = req.query;
 
-    let result;
+    const filter = {};
 
     if (trainerId) {
-      // Fetch specific trainer history
-      result = await Trainer_Student_HistoryCollection.findOne({
-        trainerId: trainerId,
-      });
+      filter.trainerId = {
+        $in: [trainerId.trim(), new ObjectId(trainerId.trim())],
+      };
+    }
 
-      if (!result) {
-        return res.status(404).send("Trainer history not found.");
-      }
-    } else {
-      // Fetch all trainer histories
-      result = await Trainer_Student_HistoryCollection.find({}).toArray();
+    if (name) {
+      filter.name = name.trim();
+    }
+
+    const result = await Trainer_Student_HistoryCollection.find(
+      filter
+    ).toArray();
+
+    if (!result.length) {
+      return res.status(404).send("No matching trainer history found.");
+    }
+
+    // Send object if single result, otherwise send array
+    if (result.length === 1) {
+      return res.send(result[0]);
     }
 
     res.send(result);
