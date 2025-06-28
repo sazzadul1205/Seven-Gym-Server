@@ -83,8 +83,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://192.168.0.11:5173",
-      "https://your-app.vercel.app",
-      "https://www.your-custom-domain.com",
+      "https://seven-gym-1885e.web.app",
+      "https://seven-gym-1885e.firebaseapp.com",
     ],
     credentials: true,
   })
